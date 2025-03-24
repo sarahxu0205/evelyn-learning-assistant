@@ -1,0 +1,47 @@
+{
+  "name": "evelyn",
+  "displayName": "Evelyn | 越学越懂你的AI导师",
+  "version": "0.0.1",
+  "description": "一个智能学习助手，帮助你规划学习路径",
+  "author": "xu juanjuan",
+  "scripts": {
+    "dev": "plasmo dev",
+    "dev:debug": "plasmo dev --verbose",
+    "build": "plasmo build"
+  },
+  "dependencies": {
+    "@ant-design/charts": "^1.4.2",
+    "@ant-design/icons": "^5.0.1",
+    "antd": "^5.4.2",
+    "plasmo": "0.82.0",
+    "react": "18.2.0",
+    "react-dom": "18.2.0"
+  },
+  "devDependencies": {
+    "@types/chrome": "0.0.237",
+    "@types/node": "20.2.4",
+    "@types/react": "18.2.7",
+    "@types/react-dom": "18.2.4",
+    "typescript": "5.0.4"
+  },
+  "manifest": {
+    "host_permissions": [
+      "http://localhost:5000/*",
+      "<all_urls>"
+    ],
+    "permissions": [
+      "storage",
+      "tabs",
+      "activeTab"
+    ],
+    "action": {
+      "default_popup": "popup.html"
+    },
+    "web_accessible_resources": [
+      {
+        "resources": ["assets/*"],
+        "matches": ["<all_urls>"]
+      }
+    ]
+  }
+}

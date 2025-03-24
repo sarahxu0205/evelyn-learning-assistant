@@ -1,0 +1,261 @@
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+}
+
+.ant-layout {
+  background: #fff;
+}
+
+.ant-menu-horizontal {
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.ant-menu-horizontal > .ant-menu-item:hover,
+.ant-menu-horizontal > .ant-menu-submenu:hover,
+.ant-menu-horizontal > .ant-menu-item-active,
+.ant-menu-horizontal > .ant-menu-submenu-active,
+.ant-menu-horizontal > .ant-menu-item-open,
+.ant-menu-horizontal > .ant-menu-submenu-open,
+.ant-menu-horizontal > .ant-menu-item-selected,
+.ant-menu-horizontal > .ant-menu-submenu-selected {
+  color: #1890ff;
+  border-bottom: 2px solid #1890ff;
+}
+
+.ant-tabs-nav-wrap {
+  justify-content: center;
+}
+
+.learning-path-input,
+.need-analysis,
+.learning-path-display,
+.learning-stats {
+  margin-bottom: 24px;
+}
+
+.ant-card {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.ant-steps-item-title {
+  font-weight: 500;
+}
+
+.ant-collapse-header {
+  font-weight: 500;
+}
+
+.ant-statistic-title {
+  font-size: 14px;
+}
+
+.ant-descriptions-item-label {
+  font-weight: 500;
+}
+
+/* 自定义滚动条 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+.ant-list-item {
+  padding: 12px 0;
+}
+
+.ant-steps-item-description {
+  font-size: 12px;
+}
+
+.ant-tag {
+  margin-right: 8px;
+}
+
+.ant-empty {
+  margin: 32px 0;
+}
+
+.ant-spin {
+  margin: 32px 0;
+}
+
+.ant-drawer-body {
+  padding: 16px;
+}
+
+.ant-drawer-header {
+  padding: 16px;
+}
+
+.ant-drawer-title {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.ant-drawer-close {
+  padding: 16px;
+}
+
+
+/* 侧边栏全局样式 */
+.evelyn-sidebar-layout {
+  width: 100% !important;
+  height: 100vh !important;
+  overflow: hidden !important;
+}
+
+.evelyn-sidebar-header {
+  height: 64px !important;
+  line-height: 64px !important;
+  padding: 0 16px !important;
+  background: #fff !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+}
+
+.evelyn-sidebar-content {
+  height: calc(100vh - 64px) !important;
+  overflow: auto !important;
+  padding: 0 !important;
+}
+
+.evelyn-sidebar-menu {
+  display: flex !important;
+  border-bottom: 1px solid #f0f0f0 !important;
+}
+
+.evelyn-sidebar-menu .ant-menu-item {
+  flex: 1 !important;
+  text-align: center !important;
+  margin: 0 !important;
+}
+
+.evelyn-sidebar-page-container {
+  padding: 16px !important;
+  overflow-y: auto !important;
+  height: calc(100% - 46px) !important;
+}
+
+/* 登录按钮样式 */
+.evelyn-login-button {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  white-space: nowrap !important;
+}
+
+/* 抽屉样式 */
+.evelyn-drawer .ant-drawer-content-wrapper {
+  width: 450px !important;
+}
+
+.evelyn-drawer .ant-drawer-body {
+  padding: 0 !important;
+  height: 100% !important;
+  overflow: hidden !important;
+}
+
+/* 确保文本不会被截断 */
+.ant-typography, p, div {
+  word-wrap: break-word !important;
+  word-break: break-word !important;
+}
+
+/* 确保按钮文字显示 */
+.ant-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* 添加以下样式 */
+.ant-form-item .ant-form-item-explain-error {
+  text-align: left !important;
+}
+
+.ant-form-item-explain, .ant-form-item-extra {
+  text-align: left !important;
+}
+
+/* 移除悬浮按钮相关样式 */
+.evelyn-toggle-button {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* 隐藏所有可能的悬浮按钮 */
+button[style*="position: fixed"][style*="border-radius: 50%"]:not(.ant-btn):not(.ant-dropdown-trigger) {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+.evelyn-toggle-button:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.evelyn-toggle-button:active {
+  cursor: grabbing;
+}
+
+
+/* 添加以下样式到您的全局样式文件中 */
+.learning-path-input .ant-typography {
+  text-align: left !important;
+}
+
+.learning-path-input {
+  text-align: left !important;
+}
+
+/* 添加以下样式到style.css文件 */
+.evelyn-sidebar-menu .ant-menu-item::after {
+  display: none !important;
+}
+
+.evelyn-sidebar-menu .ant-menu-item-selected,
+.evelyn-sidebar-menu .ant-menu-item:hover {
+  color: #1890ff !important;
+  border-bottom: none !important;
+}
+
+.evelyn-sidebar-menu .ant-menu-item-selected::before,
+.evelyn-sidebar-menu .ant-menu-item:hover::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: #1890ff;
+}
+
+/* 覆盖ant-design的默认样式 */
+.evelyn-sidebar-menu .ant-menu-item::after {
+  display: none !important;
+}
+
+.ant-menu-horizontal > .ant-menu-item::after,
+.ant-menu-horizontal > .ant-menu-submenu::after {
+  display: none !important;
+}
