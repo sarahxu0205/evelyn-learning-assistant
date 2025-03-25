@@ -26,32 +26,33 @@ export const NeedAnalysis = ({ goal }: NeedAnalysisProps) => {
   useEffect(() => {
     const fetchAnalysis = async () => {
       try {
-        const response = await fetch("http://127.0.0.1:5000/api/need-analysis", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
+        // 使用消息传递方式发送请求
+        chrome.runtime.sendMessage(
+          {
+            type: 'getNeedAnalysis',
+            goal: goal
           },
-          body: JSON.stringify({ goal })
-        })
-        
-        if (!response.ok) {
-          throw new Error("分析学习需求失败")
-        }
-        
-        const data = await response.json()
-        setAnalysis(data)
+          (response) => {
+            if (response && response.success) {
+              setAnalysis(response.data);
+            } else {
+              console.error("分析学习需求失败", response?.error);
+              setError("分析学习需求失败，请稍后重试");
+            }
+            setLoading(false);
+          }
+        );
       } catch (error) {
-        console.error("分析学习需求失败", error)
-        setError("分析学习需求失败，请稍后重试")
-      } finally {
-        setLoading(false)
+        console.error("分析学习需求失败", error);
+        setError("分析学习需求失败，请稍后重试");
+        setLoading(false);
       }
     }
     
     if (goal) {
-      fetchAnalysis()
+      fetchAnalysis();
     }
-  }, [goal])
+  }, [goal]);
   
   if (loading) {
     return (

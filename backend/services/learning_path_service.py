@@ -41,6 +41,8 @@ class LearningPathService:
             json_str = json_match.group(0)
             path_data = json.loads(json_str)
             
+            print(f"学习路径内容: {path_data}")
+
             # 保存到数据库
             learning_path = LearningPath(
                 user_id=user_id,
@@ -49,8 +51,27 @@ class LearningPathService:
             learning_path.set_path_data(path_data)
             
             if user_id:  # 只有登录用户才保存到数据库
-                db.session.add(learning_path)
-                db.session.commit()
+                try:
+                    # 从path_data中提取title
+                    title = path_data.get('title', goal)  # 如果没有title，使用goal作为默认值
+                    description = path_data.get('description', goal)  # 如果没有description，使用goal作为默认值
+                    estimated_time = path_data.get('estimated_time', "48小时")  # 如果没有description，使用48小时作为默认值
+                            
+                    # 创建学习路径记录
+                    path = LearningPath(
+                        user_id=user_id,
+                        title=title,  # 确保设置title
+                        description=description,  # 确保设置description
+                        goal=goal,
+                        estimated_time=estimated_time,  # 确保设置estimated_time
+                        path_data=json.dumps(path_data)
+                    )
+                            
+                    db.session.add(path)
+                    db.session.commit()
+                except Exception as e:
+                        db.session.rollback()
+                        print(f"保存学习路径失败: {str(e)}")
             
             return path_data
             

@@ -25,26 +25,149 @@ try {
   console.error("连接错误:", error);
 }
 
-// 添加一个消息监听器来处理登录请求
+// 统一处理API请求的函数
+const handleApiRequest = (url: string, method: string, headers: any, body: any, sendResponse: Function) => {
+  fetch(url, {
+    method: method,
+    headers: headers,
+    body: body ? JSON.stringify(body) : undefined,
+    mode: "cors",
+    credentials: "omit"
+  })
+  .then(response => response.json())
+  .then(data => {
+    sendResponse({success: true, data});
+  })
+  .catch(error => {
+    console.error("API请求失败:", error);
+    sendResponse({success: false, error: error.message});
+  });
+};
+
+// 添加消息监听器来处理所有API请求
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.type === 'login') {
-    fetch(`http://127.0.0.1:5000/api/auth/login`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Accept": "application/json"
-      },
-      body: JSON.stringify(message.data),
-      mode: "cors",
-      credentials: "omit"
-    })
-    .then(response => response.json())
-    .then(data => {
-      sendResponse({success: true, data});
-    })
-    .catch(error => {
-      sendResponse({success: false, error: error.message});
-    });
-    return true; // 保持消息通道开放
+  // 基础URL
+  const baseUrl = "http://127.0.0.1:5000";
+  
+  // 根据消息类型处理不同的API请求
+  switch (message.type) {
+    case 'login':
+      handleApiRequest(
+        `${baseUrl}/api/auth/login`,
+        "POST",
+        {
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        message.data,
+        sendResponse
+      );
+      break;
+      
+    case 'getUserPaths':
+      handleApiRequest(
+        `${baseUrl}/api/learning-path`,
+        "GET",
+        {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${message.token}`
+        },
+        null,
+        sendResponse
+      );
+      break;
+      
+    case 'createLearningPath':
+      handleApiRequest(
+        `${baseUrl}/api/learning-path`,
+        "POST",
+        {
+          "Content-Type": "application/json",
+          "Authorization": message.token ? `Bearer ${message.token}` : undefined
+        },
+        message.data,
+        sendResponse
+      );
+      break;
+      
+    case 'getLearningPath':
+      handleApiRequest(
+        `${baseUrl}/api/learning-path/${message.pathId}`,
+        "GET",
+        {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${message.token}`
+        },
+        null,
+        sendResponse
+      );
+      break;
+      
+    case 'updatePathCompletion':
+      handleApiRequest(
+        `${baseUrl}/api/learning-path/${message.pathId}/completion`,
+        "PUT",
+        {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${message.token}`
+        },
+        { completion_rate: message.completionRate },
+        sendResponse
+      );
+      break;
+      
+    case 'recordBehavior':
+      handleApiRequest(
+        `${baseUrl}/api/user-behavior`,
+        "POST",
+        {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${message.token}`
+        },
+        message.data,
+        sendResponse
+      );
+      break;
+      
+    case 'getUserBehaviorStats':
+      handleApiRequest(
+        `${baseUrl}/api/user-behavior-stats`,
+        "GET",
+        {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${message.token}`
+        },
+        null,
+        sendResponse
+      );
+      break;
+      
+    case 'getNeedAnalysis':
+      handleApiRequest(
+        `${baseUrl}/api/need-analysis`,
+        "POST",
+        {
+          "Content-Type": "application/json"
+        },
+        { goal: message.goal },
+        sendResponse
+      );
+      break;
+      
+    case 'getResources':
+      handleApiRequest(
+        `${baseUrl}/api/resources`,
+        "GET",
+        {
+          "Content-Type": "application/json",
+          "Authorization": message.token ? `Bearer ${message.token}` : undefined
+        },
+        null,
+        sendResponse
+      );
+      break;
   }
+  
+  // 返回true表示将异步发送响应
+  return true;
 });
