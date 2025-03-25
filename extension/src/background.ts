@@ -154,6 +154,19 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       );
       break;
       
+    case 'getLearningStats':
+      handleApiRequest(
+        `${baseUrl}/api/user-behavior/stats`,
+        "GET",
+        {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${message.token}`
+        },
+        null,
+        sendResponse
+      );
+      break;
+      
     case 'getResources':
       handleApiRequest(
         `${baseUrl}/api/resources`,

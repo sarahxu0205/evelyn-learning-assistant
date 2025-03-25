@@ -37,27 +37,49 @@ export const LearningStats = () => {
           throw new Error("未登录")
         }
         
-        const response = await fetch("http://127.0.0.1:5000/api/user-behavior/stats", {
-          method: "GET",
-          headers: {
-            "Authorization": `Bearer ${result.userToken}`,
-            "Content-Type": "application/json"
+        // 使用消息传递方式发送请求
+        chrome.runtime.sendMessage(
+          {
+            type: 'getLearningStats',
+            token: result.userToken
+          },
+          (response) => {
+            if (response && response.success) {
+              setStats(response.data);
+            } else {
+              console.error("获取学习统计失败", response?.error);
+              setError("获取学习统计失败，请稍后重试");
+              
+              // 使用模拟数据
+              setStats({
+                totalLearningTime: 1250, // 分钟
+                weeklyLearningTime: [
+                  { day: "周一", minutes: 120 },
+                  { day: "周二", minutes: 90 },
+                  { day: "周三", minutes: 180 },
+                  { day: "周四", minutes: 60 },
+                  { day: "周五", minutes: 150 },
+                  { day: "周六", minutes: 200 },
+                  { day: "周日", minutes: 150 }
+                ],
+                domainDistribution: [
+                  { domain: "编程", percentage: 45 },
+                  { domain: "数据分析", percentage: 30 },
+                  { domain: "人工智能", percentage: 15 },
+                  { domain: "其他", percentage: 10 }
+                ]
+              });
+            }
+            setLoading(false);
           }
-        })
-        
-        if (!response.ok) {
-          throw new Error("获取学习统计失败")
-        }
-        
-        const data = await response.json()
-        setStats(data)
+        );
       } catch (error) {
-        console.error("获取学习统计失败", error)
-        setError("获取学习统计失败，请稍后重试")
+        console.error("获取学习统计失败", error);
+        setError("获取学习统计失败，请稍后重试");
         
         // 使用模拟数据
         setStats({
-          totalLearningTime: 1250, // 分钟
+          totalLearningTime: 1250,
           weeklyLearningTime: [
             { day: "周一", minutes: 120 },
             { day: "周二", minutes: 90 },
@@ -73,14 +95,13 @@ export const LearningStats = () => {
             { domain: "人工智能", percentage: 15 },
             { domain: "其他", percentage: 10 }
           ]
-        })
-      } finally {
-        setLoading(false)
+        });
+        setLoading(false);
       }
     }
     
-    fetchStats()
-  }, [])
+    fetchStats();
+  }, []);
   
   if (loading) {
     return (
