@@ -34,7 +34,17 @@ export const LearningPathInput = ({ onSubmit, loading }: LearningPathInputProps)
       return
     }
     
-    onSubmit(goal)
+    // 清理输入内容，确保不包含特殊字符
+    const cleanedGoal = goal.trim().replace(/[\r\n]+/g, ' ').replace(/"/g, "'");
+    console.log("提交学习目标:", cleanedGoal);
+    
+    // 提交处理
+    try {
+      onSubmit(cleanedGoal);
+    } catch (error) {
+      console.error("提交学习目标时出错:", error);
+      message.error("生成学习路径失败，请稍后重试");
+    }
   }
   
   const examples = [
@@ -62,6 +72,7 @@ export const LearningPathInput = ({ onSubmit, loading }: LearningPathInputProps)
       {/* 将Card替换为普通的灰色文本提示 */}
       <div style={{ marginBottom: 16 }}>
         <Text type="secondary">提示：包含预算信息可获得更精准的推荐哦~</Text>
+        {/* 
         <div style={{ marginTop: 8 }}>
           <Text type="secondary">试试输入：</Text>
           <ul style={{ margin: "8px 0", paddingLeft: 20 }}>
@@ -72,6 +83,7 @@ export const LearningPathInput = ({ onSubmit, loading }: LearningPathInputProps)
             ))}
           </ul>
         </div>
+        */}
       </div>
       
       <Button 

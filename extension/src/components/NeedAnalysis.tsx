@@ -71,72 +71,150 @@ export const NeedAnalysis = ({ goal }: NeedAnalysisProps) => {
   }
   
   return (
-    <div className="need-analysis">
-      <Title level={4}>需求分析</Title>
+    <div className="need-analysis" style={{ padding: '0 16px' }}>
+      <Title level={4} style={{ marginBottom: '16px', textAlign: 'center' }}>需求分析</Title>
       
-      <Paragraph>
+      <Paragraph style={{ marginBottom: '16px', textAlign: 'center', color: '#666' }}>
         根据您的学习目标，我们分析出以下信息：
       </Paragraph>
       
-      <Card style={{ marginBottom: 16 }}>
-        <Descriptions column={1} bordered size="small">
-          <Descriptions.Item 
-            label={<span><UserOutlined /> 学习领域</span>}
-            labelStyle={{ fontWeight: 'bold' }}
-          >
-            <Tag color="blue">{analysis.domain}</Tag>
-          </Descriptions.Item>
-          
-          <Descriptions.Item 
-            label={<span><UserOutlined /> 学习类型</span>}
-            labelStyle={{ fontWeight: 'bold' }}
-          >
-            <Tag color="green">{analysis.learning_type}</Tag>
-          </Descriptions.Item>
-          
-          <Descriptions.Item 
-            label={<span><UserOutlined /> 基础水平</span>}
-            labelStyle={{ fontWeight: 'bold' }}
-          >
-            <Tag color="orange">{analysis.base_level}</Tag>
-          </Descriptions.Item>
-          
-          {analysis.learning_time && (
-            <Descriptions.Item 
-              label={<span><ClockCircleOutlined /> 学习时间</span>}
-              labelStyle={{ fontWeight: 'bold' }}
-            >
-              {analysis.learning_time}
-            </Descriptions.Item>
-          )}
-          
-          {analysis.budget && (
-            <Descriptions.Item 
-              label={<span><DollarOutlined /> 学习预算</span>}
-              labelStyle={{ fontWeight: 'bold' }}
-            >
-              {analysis.budget}
-            </Descriptions.Item>
-          )}
-          
-          {analysis.target_job && (
-            <Descriptions.Item 
-              label={<span><AimOutlined /> 目标岗位</span>}
-              labelStyle={{ fontWeight: 'bold' }}
-            >
-              {analysis.target_job}
-            </Descriptions.Item>
-          )}
-          
-          {analysis.implicit_needs && (
-            <Descriptions.Item 
-              label={<span><BulbOutlined /> 隐性需求</span>}
-              labelStyle={{ fontWeight: 'bold' }}
-            >
-              {analysis.implicit_needs}
-            </Descriptions.Item>
-          )}
-        </Descriptions>
+      <Card 
+        style={{ 
+          marginBottom: 16, 
+          borderRadius: '8px', 
+          boxShadow: '0 2px 8px rgba(0,0,0,0.08)' 
+        }}
+      >
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <tbody>
+            <tr style={{ borderBottom: '1px solid #f0f0f0' }}>
+              <td style={{ 
+                padding: '12px', 
+                width: '120px', 
+                fontWeight: 'bold',
+                borderRight: '1px solid #f0f0f0',
+                backgroundColor: '#fafafa',
+                verticalAlign: 'middle'
+              }}>
+                <UserOutlined style={{ marginRight: '8px', color: '#1890ff' }} />
+                学习领域
+              </td>
+              <td style={{ padding: '12px', verticalAlign: 'middle' }}>
+                <Tag color="blue" style={{ margin: 0, fontSize: '14px', padding: '4px 8px' }}>
+                  {analysis.domain}
+                </Tag>
+              </td>
+            </tr>
+            
+            <tr style={{ borderBottom: '1px solid #f0f0f0' }}>
+              <td style={{ 
+                padding: '12px', 
+                fontWeight: 'bold',
+                borderRight: '1px solid #f0f0f0',
+                backgroundColor: '#fafafa',
+                verticalAlign: 'middle'
+              }}>
+                <UserOutlined style={{ marginRight: '8px', color: '#52c41a' }} />
+                学习类型
+              </td>
+              <td style={{ padding: '12px', verticalAlign: 'middle' }}>
+                <Tag color="green" style={{ margin: 0, fontSize: '14px', padding: '4px 8px' }}>
+                  {analysis.learning_type}
+                </Tag>
+              </td>
+            </tr>
+            
+            <tr style={{ borderBottom: '1px solid #f0f0f0' }}>
+              <td style={{ 
+                padding: '12px', 
+                fontWeight: 'bold',
+                borderRight: '1px solid #f0f0f0',
+                backgroundColor: '#fafafa',
+                verticalAlign: 'middle'
+              }}>
+                <UserOutlined style={{ marginRight: '8px', color: '#fa8c16' }} />
+                基础水平
+              </td>
+              <td style={{ padding: '12px', verticalAlign: 'middle' }}>
+                <Tag color="orange" style={{ margin: 0, fontSize: '14px', padding: '4px 8px' }}>
+                  {analysis.base_level}
+                </Tag>
+              </td>
+            </tr>
+            
+            {analysis.learning_time && (
+              <tr style={{ borderBottom: '1px solid #f0f0f0' }}>
+                <td style={{ 
+                  padding: '12px', 
+                  fontWeight: 'bold',
+                  borderRight: '1px solid #f0f0f0',
+                  backgroundColor: '#fafafa',
+                  verticalAlign: 'middle'
+                }}>
+                  <ClockCircleOutlined style={{ marginRight: '8px', color: '#722ed1' }} />
+                  学习时间
+                </td>
+                <td style={{ padding: '12px', verticalAlign: 'middle', fontSize: '14px' }}>
+                  {analysis.learning_time}
+                </td>
+              </tr>
+            )}
+            
+            {analysis.budget && (
+              <tr style={{ borderBottom: '1px solid #f0f0f0' }}>
+                <td style={{ 
+                  padding: '12px', 
+                  fontWeight: 'bold',
+                  borderRight: '1px solid #f0f0f0',
+                  backgroundColor: '#fafafa',
+                  verticalAlign: 'middle'
+                }}>
+                  <DollarOutlined style={{ marginRight: '8px', color: '#eb2f96' }} />
+                  学习预算
+                </td>
+                <td style={{ padding: '12px', verticalAlign: 'middle', fontSize: '14px' }}>
+                  {analysis.budget}
+                </td>
+              </tr>
+            )}
+            
+            {analysis.target_job && (
+              <tr style={{ borderBottom: '1px solid #f0f0f0' }}>
+                <td style={{ 
+                  padding: '12px', 
+                  fontWeight: 'bold',
+                  borderRight: '1px solid #f0f0f0',
+                  backgroundColor: '#fafafa',
+                  verticalAlign: 'middle'
+                }}>
+                  <AimOutlined style={{ marginRight: '8px', color: '#f5222d' }} />
+                  目标岗位
+                </td>
+                <td style={{ padding: '12px', verticalAlign: 'middle', fontSize: '14px' }}>
+                  {analysis.target_job}
+                </td>
+              </tr>
+            )}
+            
+            {analysis.implicit_needs && (
+              <tr>
+                <td style={{ 
+                  padding: '12px', 
+                  fontWeight: 'bold',
+                  borderRight: '1px solid #f0f0f0',
+                  backgroundColor: '#fafafa',
+                  verticalAlign: 'middle'
+                }}>
+                  <BulbOutlined style={{ marginRight: '8px', color: '#faad14' }} />
+                  隐性需求
+                </td>
+                <td style={{ padding: '12px', verticalAlign: 'middle', fontSize: '14px' }}>
+                  {analysis.implicit_needs}
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </Card>
     </div>
   )
