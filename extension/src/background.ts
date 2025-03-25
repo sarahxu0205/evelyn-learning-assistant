@@ -179,6 +179,32 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         sendResponse
       );
       break;
+      
+    // 在 switch 语句中添加新的 case
+    case 'getCurrentTabInfo':
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        if (tabs && tabs[0]) {
+          sendResponse({
+            url: tabs[0].url,
+            title: tabs[0].title
+          });
+        } else {
+          sendResponse({ error: "无法获取当前标签页信息" });
+        }
+      });
+      return true; // 保持消息通道开放，以便异步发送响应
+    case 'recordUserBehavior':
+      handleApiRequest(
+        `${baseUrl}/api/user-behavior`,
+        "POST",
+        {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${message.token}`
+        },
+        message.data,
+        sendResponse
+      );
+      break;
   }
   
   // 返回true表示将异步发送响应

@@ -69,9 +69,27 @@ const EvelynOverlay = () => {
   
   useEffect(() => {
     // 获取当前页面信息
-    setCurrentUrl(window.location.href)
-    setCurrentTitle(document.title)
-    setStartTime(Date.now())
+    try {
+      // 使用多种方式尝试获取当前URL
+      const url = window.location.href || document.URL || document.documentURI || "";
+      console.log("当前页面URL:", url);
+      setCurrentUrl(url);
+      setCurrentTitle(document.title || "");
+      setStartTime(Date.now());
+    } catch (error) {
+      console.error("获取页面信息失败:", error);
+      // 如果无法获取URL，可以尝试通过chrome API获取
+      chrome.runtime.sendMessage(
+        { type: "getCurrentTabInfo" },
+        (response) => {
+          if (response && response.url) {
+            console.log("通过API获取的URL:", response.url);
+            setCurrentUrl(response.url);
+            setCurrentTitle(response.title || "");
+          }
+        }
+      );
+    }
     
     // 监听来自后台脚本的消息
     const handleMessage = (message: { action: string }, sender: any, sendResponse: any) => {
@@ -85,7 +103,7 @@ const EvelynOverlay = () => {
     
     // 监听页面关闭事件
     const handleBeforeUnload = () => {
-      recordBehavior()
+      recordPageView()
     }
     
     window.addEventListener("beforeunload", handleBeforeUnload)
@@ -93,12 +111,12 @@ const EvelynOverlay = () => {
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload)
       chrome.runtime.onMessage.removeListener(handleMessage)
-      recordBehavior()
+      recordPageView()
     }
   }, [])
   
-  // 记录用户行为
-  const recordBehavior = async () => {
+  // 记录页面访问
+  const recordPageView = async () => {
     try {
       // 计算停留时间（秒）
       const duration = Math.floor((Date.now() - startTime) / 1000)
@@ -110,45 +128,92 @@ const EvelynOverlay = () => {
       
       // 获取搜索查询（如果有）
       let searchQuery = ""
-      const url = new URL(currentUrl)
       
-      // 检查常见搜索引擎
-      if (url.hostname.includes("google.com")) {
-        searchQuery = url.searchParams.get("q") || ""
-      } else if (url.hostname.includes("bing.com")) {
-        searchQuery = url.searchParams.get("q") || ""
-      } else if (url.hostname.includes("baidu.com")) {
-        searchQuery = url.searchParams.get("wd") || ""
+      // 验证URL是否有效
+      if (!currentUrl || typeof currentUrl !== 'string') {
+        console.warn('当前URL无效:', currentUrl);
+        return;
+      } 
+      
+      try {
+        const url = new URL(currentUrl);
+        
+        // 检查常见搜索引擎
+        if (url.hostname.includes("google.com")) {
+          searchQuery = url.searchParams.get("q") || ""
+        } else if (url.hostname.includes("bing.com")) {
+          searchQuery = url.searchParams.get("q") || ""
+        } else if (url.hostname.includes("baidu.com")) {
+          searchQuery = url.searchParams.get("wd") || ""
+        }
+      } catch (urlError) {
+        console.error('URL解析失败:', urlError);
+        return;
       }
       
-      // 获取用户Token
-      const result = await new Promise<{userToken?: string}>((resolve) => {
-        chrome.storage.local.get(["userToken"], resolve)
-      })
-      
-      // 如果用户未登录，不记录
-      if (!result.userToken) {
-        return
-      }
-      
-      // 发送请求
-      await fetch("http://localhost:5000/api/user-behavior", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${result.userToken}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          url: currentUrl,
-          title: currentTitle,
-          search_query: searchQuery,
-          duration
-        })
-      })
+      // 调用通用的记录行为函数
+      recordBehavior('page_view', currentTitle, currentUrl);
     } catch (error) {
-      console.error("记录用户行为失败", error)
+      console.error("记录页面访问失败", error)
     }
   }
+  
+  // 记录用户行为
+  const recordBehavior = async (type: string, content: string, url?: string) => {
+    try {
+      // 检查 URL 是否有效
+      let validUrl = '';
+      if (url) {
+        try {
+          // 尝试构造 URL 对象来验证 URL 是否有效
+          new URL(url);
+          validUrl = url;
+        } catch (e) {
+          console.warn('无效的 URL:', url);
+          // 如果 URL 无效，使用当前标签的 URL
+          validUrl = currentUrl || window.location.href;
+        }
+      } else {
+        // 如果没有提供 URL，使用当前标签的 URL
+        validUrl = currentUrl || window.location.href;
+      }
+  
+      // 获取用户令牌和 ID
+      const { userToken, userId } = await new Promise<{userToken?: string, userId?: number}>((resolve) => {
+        chrome.storage.local.get(['userToken', 'userId'], (result) => {
+          resolve(result as {userToken?: string, userId?: number});
+        });
+      });
+  
+      if (!userToken || !userId) {
+        console.warn('用户未登录，无法记录行为');
+        return;
+      }
+  
+      // 使用消息传递方式发送请求
+      chrome.runtime.sendMessage(
+        {
+          type: 'recordUserBehavior',
+          token: userToken,
+          data: {
+            user_id: userId,
+            behavior_type: type,
+            content: content,
+            url: validUrl
+          }
+        },
+        (response) => {
+          if (response && response.success) {
+            console.log('行为记录成功:', type);
+          } else {
+            console.error('记录行为失败:', response?.error);
+          }
+        }
+      );
+    } catch (error) {
+      console.error('记录用户行为失败', error);
+    }
+  };
   
   const showDrawer = () => {
     setVisible(true)

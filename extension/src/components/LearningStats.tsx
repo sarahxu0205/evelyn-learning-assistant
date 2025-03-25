@@ -144,60 +144,91 @@ export const LearningStats = () => {
   }
   
   return (
-    <div className="learning-stats">
-      <Title level={4}>学习统计</Title>
+    <div className="learning-stats" style={{ padding: '16px' }}>
+      <Title level={4} style={{ marginBottom: '24px', textAlign: 'center' }}>学习统计</Title>
       
-      <Row gutter={16} style={{ marginBottom: 24 }}>
+      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
         <Col span={12}>
-          <Card>
-            <Statistic
-              title="总学习时间"
-              value={hours}
-              suffix={`小时 ${minutes} 分钟`}
-              prefix={<ClockCircleOutlined />}
-            />
+          <Card hoverable style={{ height: '100%', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '8px', color: '#666' }}>总学习时间</div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <ClockCircleOutlined style={{ fontSize: '24px', color: '#1890ff', marginRight: '8px' }} />
+                <span style={{ fontSize: '32px', fontWeight: 'bold', color: '#1890ff' }}>{hours}</span>
+              </div>
+              <div style={{ fontSize: '18px', color: '#1890ff', marginTop: '4px' }}>
+                小时 {minutes} 分钟
+              </div>
+            </div>
           </Card>
         </Col>
         <Col span={12}>
-          <Card>
-            <Statistic
-              title="本周学习天数"
-              value={stats.weeklyLearningTime.filter(item => item.minutes > 0).length}
-              suffix="天"
-              prefix={<GlobalOutlined />}
-            />
+          <Card hoverable style={{ height: '100%', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '8px', color: '#666' }}>本周学习天数</div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <GlobalOutlined style={{ fontSize: '24px', color: '#52c41a', marginRight: '8px' }} />
+                <span style={{ fontSize: '32px', fontWeight: 'bold', color: '#52c41a' }}>
+                  {stats.weeklyLearningTime.filter(item => item.minutes > 0).length}
+                </span>
+              </div>
+              <div style={{ fontSize: '18px', color: '#52c41a', marginTop: '4px' }}>
+                天
+              </div>
+            </div>
           </Card>
         </Col>
       </Row>
       
-      <Card title="本周学习时间分布" style={{ marginBottom: 24 }}>
-        <div style={{ height: 300 }}>
-          {/* 使用Progress组件替代Column图表 */}
+      <Card 
+        title={<span style={{ fontWeight: 'bold' }}>本周学习时间分布</span>} 
+        style={{ marginBottom: 24, borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
+        headStyle={{ borderBottom: '1px solid #f0f0f0', padding: '12px 16px' }}
+        bodyStyle={{ padding: '16px' }}
+      >
+        <div style={{ maxHeight: 300, overflowY: 'auto' }}>
           {stats.weeklyLearningTime.map((item, index) => (
-            <div key={index} style={{ marginBottom: 16 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span>{item.day}</span>
-                <span>{item.minutes} 分钟</span>
+            <div key={index} style={{ marginBottom: index === stats.weeklyLearningTime.length - 1 ? 0 : 16 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                <span style={{ fontWeight: 'bold' }}>{item.day}</span>
+                <span style={{ color: '#1890ff', fontWeight: 'bold' }}>{item.minutes} 分钟</span>
               </div>
               <Progress 
                 percent={Math.round((item.minutes / Math.max(...stats.weeklyLearningTime.map(i => i.minutes))) * 100)} 
                 status="active" 
-                strokeColor="#1890ff"
-                format={() => `${item.minutes}分钟`}
+                strokeColor={{
+                  '0%': '#108ee9',
+                  '100%': '#87d068',
+                }}
+                strokeWidth={10}
+                format={() => ''}
               />
             </div>
           ))}
         </div>
       </Card>
       
-      <Card title="学习领域分布">
+      <Card 
+        title={<span style={{ fontWeight: 'bold' }}>学习领域分布</span>}
+        style={{ borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
+        headStyle={{ borderBottom: '1px solid #f0f0f0', padding: '12px 16px' }}
+        bodyStyle={{ padding: '16px' }}
+      >
         {stats.domainDistribution.map((item, index) => (
-          <div key={index} style={{ marginBottom: 16 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span>{item.domain}</span>
-              <span>{item.percentage}%</span>
+          <div key={index} style={{ marginBottom: index === stats.domainDistribution.length - 1 ? 0 : 16 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+              <span style={{ fontWeight: 'bold' }}>{item.domain}</span>
+              <span style={{ color: '#722ed1', fontWeight: 'bold' }}>{item.percentage}%</span>
             </div>
-            <Progress percent={item.percentage} status="active" />
+            <Progress 
+              percent={item.percentage} 
+              status="active" 
+              strokeColor={{
+                from: '#722ed1',
+                to: '#1890ff',
+              }}
+              strokeWidth={10}
+            />
           </div>
         ))}
       </Card>
