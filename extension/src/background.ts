@@ -24,3 +24,27 @@ try {
 } catch (error) {
   console.error("连接错误:", error);
 }
+
+// 添加一个消息监听器来处理登录请求
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === 'login') {
+    fetch(`http://127.0.0.1:5000/api/auth/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
+      body: JSON.stringify(message.data),
+      mode: "cors",
+      credentials: "omit"
+    })
+    .then(response => response.json())
+    .then(data => {
+      sendResponse({success: true, data});
+    })
+    .catch(error => {
+      sendResponse({success: false, error: error.message});
+    });
+    return true; // 保持消息通道开放
+  }
+});
