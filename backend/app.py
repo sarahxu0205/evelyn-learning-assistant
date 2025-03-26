@@ -49,7 +49,7 @@ db.init_app(app)
 # 注册蓝图
 app.register_blueprint(auth_bp, url_prefix='/api/auth')
 app.register_blueprint(user_behavior_bp, url_prefix='/api/user-behavior')
-app.register_blueprint(user_behavior_stats_bp)
+app.register_blueprint(user_behavior_stats_bp, url_prefix='/api/user-behavior-stats')
 app.register_blueprint(learning_path_bp, url_prefix='/api/learning-path')
 app.register_blueprint(need_analysis_bp, url_prefix='/api/need-analysis')
 app.register_blueprint(user_bp, url_prefix='/api/user')  

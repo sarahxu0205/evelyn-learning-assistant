@@ -156,7 +156,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       
     case 'getLearningStats':
       handleApiRequest(
-        `${baseUrl}/api/user-behavior/stats`,
+        `${baseUrl}/api/user-behavior-stats/stats`,
         "GET",
         {
           "Content-Type": "application/json",
