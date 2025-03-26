@@ -25,7 +25,7 @@ def get_user_stats(current_user):
     try:
         # 获取用户统计数据
         stats = stats_service.get_user_stats(current_user.id)
-        logger.info(f"用户学习情况统计：{stats}")
+        #logger.info(f"用户学习情况统计：{stats}")
 
         return jsonify(stats), 200
     except Exception as e:
