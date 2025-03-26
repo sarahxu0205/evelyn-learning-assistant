@@ -4,7 +4,7 @@ from models.user import db
 # 确保导入所有模型，以便正确创建表
 from models.user import User
 from models.user_behavior import UserBehavior
-from models.learning_path import LearningPath, LearningStage
+from models.learning_path import LearningPath
 from routes.auth import auth_bp
 from routes.user_behavior import user_behavior_bp
 from routes.user_behavior_stats import user_behavior_stats_bp
