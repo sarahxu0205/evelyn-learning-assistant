@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react"
 import { Layout, Menu, Button, Avatar, Dropdown, message } from "antd"
-import { UserOutlined, BookOutlined, BarChartOutlined, LogoutOutlined } from "@ant-design/icons"
+import { UserOutlined, BookOutlined, BarChartOutlined, LogoutOutlined, IdcardOutlined } from "@ant-design/icons"
 import { AuthModal } from "./components/AuthModal"
 import LearningPathPage from "./pages/learning-path"
 import LearningStatsPage from "./pages/learning-stats"
+import UserProfilePage from "./pages/user-profile"
 import "./style.css"
 
 const { Header, Content } = Layout
@@ -116,11 +117,20 @@ const Sidebar = () => {
           }}>
             学习统计
           </Menu.Item>
+          <Menu.Item key="user-profile" icon={<IdcardOutlined />} style={{ 
+            flex: 1, 
+            textAlign: "center",
+            position: "relative",
+            borderBottom: "none"
+          }}>
+            我的画像
+          </Menu.Item>
         </Menu>
         
         <div style={{ padding: '16px', overflowY: 'auto', height: 'calc(100% - 46px)' }} className="evelyn-sidebar-page-container">
           {currentPage === "learning-path" && <LearningPathPage />}
           {currentPage === "learning-stats" && <LearningStatsPage />}
+          {currentPage === "user-profile" && <UserProfilePage />}
         </div>
       </Content>
       

@@ -222,10 +222,35 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           }
         });
       break;
+
+      case 'getUserProfile':
+        const { userId, token } = message;
+      
+        // 发起API请求获取用户画像
+        fetch(`${baseUrl}/api/user/${userId}/profile`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          }
+        })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`获取用户画像失败: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(data => {
+          sendResponse({ success: true, data });
+        })
+        .catch(error => {
+          console.error("获取用户画像出错:", error);
+          sendResponse({ success: false, error: error.message });
+        });
+
+      break;
   }
 
-  // 返回true表示将异步发送响应
-  return true;
 });
 
 // 当标签页更新时，向内容脚本发送URL更新

@@ -130,29 +130,3 @@ def update_user_profile(current_user, user_id):
         return jsonify({'message': '用户画像更新成功'}), 200
     except AttributeError as e:
         return jsonify({'message': f'更新失败: 用户模型缺少必要的属性 - {str(e)}'}), 400
-
-@user_bp.route('/<user_id>/learning-paths', methods=['GET'], endpoint='get_learning_paths')
-@user_token_required
-def get_user_learning_paths(current_user, user_id):
-    """获取用户的学习路径列表"""
-    # 验证用户ID - 将user_id转换为整数再比较
-    if current_user.id != int(user_id):
-        return jsonify({'message': f'无权访问此用户信息，请求的用户ID: {user_id}'}), 403
-    
-    from models.learning_path import LearningPath
-    
-    # 获取用户的学习路径
-    paths = LearningPath.query.filter_by(user_id=user_id).all()
-    
-    # 构建响应
-    paths_list = []
-    for path in paths:
-        paths_list.append({
-            'id': path.id,
-            'title': path.title,
-            'goal': path.goal,
-            'created_at': path.created_at.strftime('%Y-%m-%d %H:%M:%S'),
-            'estimated_time': path.estimated_time
-        })
-    
-    return jsonify(paths_list), 200
