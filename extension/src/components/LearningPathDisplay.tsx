@@ -1,5 +1,6 @@
-import { Steps, Collapse, Typography, Tag, List, Card, Button, Space } from "antd"
-import { ClockCircleOutlined, DollarOutlined, BookOutlined, ToolOutlined, ReadOutlined, VideoCameraOutlined } from "@ant-design/icons"
+import { Steps, Collapse, Typography, Tag, List, Card, Button, Space, Slider, Progress, message } from "antd"
+import { ClockCircleOutlined, DollarOutlined, BookOutlined, ToolOutlined, ReadOutlined, VideoCameraOutlined, CheckCircleOutlined } from "@ant-design/icons"
+import { useState, useEffect } from "react"
 
 const { Step } = Steps
 const { Panel } = Collapse
@@ -26,13 +27,25 @@ interface LearningPath {
   description: string
   estimated_time: string
   stages: Stage[]
+  id?: number  // 添加ID字段用于API调用
+  completion_rate?: number  // 添加完成率字段
 }
 
 interface LearningPathDisplayProps {
   path: LearningPath
+  onUpdatePath?: (updatedPath: LearningPath) => void  // 添加更新回调
 }
 
-export const LearningPathDisplay = ({ path }: LearningPathDisplayProps) => {
+export const LearningPathDisplay = ({ path, onUpdatePath }: LearningPathDisplayProps) => {
+  const [completionRate, setCompletionRate] = useState<number>(path.completion_rate || 0)
+  const [updating, setUpdating] = useState<boolean>(false)
+  
+  // 添加 useEffect 监听 path 变化
+  useEffect(() => {
+    // 当 path 变化时，更新 completionRate 状态
+    setCompletionRate(path.completion_rate || 0);
+  }, [path, path.id, path.completion_rate]);
+  
   const getResourceIcon = (type: string) => {
     switch (type.toLowerCase()) {
       case "课程":
@@ -63,23 +76,165 @@ export const LearningPathDisplay = ({ path }: LearningPathDisplayProps) => {
     }
   }
   
+  // 更新完成率的函数
+  const updateCompletionRate = async () => {
+    if (!path.id) {
+      message.error('无法更新进度：缺少学习路径ID')
+      return
+    }
+    
+    setUpdating(true)
+    
+    try {
+      // 获取用户令牌
+      const userTokenResult = await new Promise<{userToken?: string}>((resolve) => {
+        chrome.storage.local.get(['userToken'], (result) => {
+          resolve(result)
+        })
+      })
+      
+      if (!userTokenResult.userToken) {
+        message.error('请先登录后再更新学习进度')
+        setUpdating(false)
+        return
+      }
+      
+      // 发送消息到后台脚本进行API调用
+      chrome.runtime.sendMessage(
+        {
+          type: 'updateLearningPathCompletion',
+          pathId: path.id,
+          completionRate: completionRate,
+          token: userTokenResult.userToken
+        },
+        (response) => {
+          setUpdating(false)
+          
+          if (response && response.success) {
+            message.success('学习进度已更新')
+            
+            // 更新本地路径数据
+            if (onUpdatePath) {
+              onUpdatePath({
+                ...path,
+                completion_rate: completionRate
+              })
+            }
+          } else {
+            message.error(response?.error || '更新失败，请稍后再试')
+          }
+        }
+      )
+    } catch (error) {
+      console.error('更新学习进度出错:', error)
+      message.error('更新失败，请稍后再试')
+      setUpdating(false)
+    }
+  }
+  
+  // 计算当前阶段
+  const getCurrentStage = () => {
+    if (!path.completion_rate || path.completion_rate === 0) return 0
+    if (path.completion_rate === 100) return path.stages.length - 1
+    
+    // 根据完成率计算当前阶段
+    const stageIndex = Math.floor((path.completion_rate / 100) * path.stages.length)
+    return Math.min(stageIndex, path.stages.length - 1)
+  }
+  
   return (
     <div className="learning-path-display" style={{ padding: '0 16px' }}>
       <Title level={4} style={{ marginBottom: '16px', textAlign: 'left' }}>{path.title}</Title>
       
       <Paragraph style={{ textAlign: 'left', marginBottom: '16px' }}>{path.description}</Paragraph>
       
-      <Paragraph style={{ textAlign: 'left', marginBottom: '24px' }}>
-        <Tag icon={<ClockCircleOutlined />} color="blue">
-          预计学习时间: {path.estimated_time}
-        </Tag>
-      </Paragraph>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+        <Paragraph style={{ textAlign: 'left', marginBottom: 0 }}>
+          <Tag icon={<ClockCircleOutlined />} color="blue">
+            预计学习时间: {path.estimated_time}
+          </Tag>
+        </Paragraph>
+        
+        {/* 添加完成率显示 */}
+        {path.id && (
+          <Paragraph style={{ textAlign: 'left', marginBottom: 0 }}>
+            <Tag icon={<CheckCircleOutlined />} color={completionRate === 100 ? "success" : "processing"}>
+              完成进度: {completionRate}%
+            </Tag>
+          </Paragraph>
+        )}
+      </div>
+      
+      {/* 添加完成率更新组件 */}
+      {path.id && (
+        <Card 
+          size="small" 
+          title={<div style={{ display: 'flex', alignItems: 'center' }}>
+            <CheckCircleOutlined style={{ marginRight: 8, color: '#1890ff' }} />
+            <span>学习进度跟踪</span>
+          </div>}
+          style={{ 
+            marginBottom: '24px', 
+            borderRadius: '8px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
+          }}
+        >
+          <div style={{ textAlign: 'center', marginBottom: '12px' }}>
+            <Text style={{ fontSize: '16px', fontWeight: 'bold' }}>
+              当前进度: <span style={{ color: completionRate === 100 ? '#52c41a' : '#1890ff' }}>{completionRate}%</span>
+            </Text>
+          </div>
+          
+          <Progress 
+            percent={completionRate} 
+            status={completionRate === 100 ? "success" : "active"} 
+            style={{ marginBottom: '16px' }}
+            strokeColor={{
+              '0%': '#108ee9',
+              '100%': '#87d068',
+            }}
+          />
+          
+          <div style={{ marginBottom: '24px' }}>
+            <Slider
+              value={completionRate}
+              onChange={(value) => setCompletionRate(value)}
+              min={0}
+              max={100}
+              step={5}
+              marks={{
+                0: '0%',
+                25: '25%',
+                50: '50%',
+                75: '75%',
+                100: '100%'
+              }}
+              tooltip={{
+                formatter: (value) => `${value}%`
+              }}
+            />
+          </div>
+          
+          <div style={{ textAlign: 'center', marginTop: '8px' }}>
+            <Button 
+              type="primary" 
+              onClick={updateCompletionRate} 
+              loading={updating}
+              disabled={completionRate === path.completion_rate}
+              icon={<CheckCircleOutlined />}
+              style={{ width: '120px' }}
+            >
+              更新进度
+            </Button>
+          </div>
+        </Card>
+      )}
       
       <div style={{ marginBottom: '24px' }}>
         <Title level={5} style={{ marginBottom: '16px', textAlign: 'left' }}>学习阶段</Title>
         <Steps 
           direction="vertical" 
-          current={0}
+          current={getCurrentStage()}
           style={{ textAlign: 'left' }}
         >
           {path.stages.map((stage, index) => (

@@ -273,8 +273,23 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           sendResponse({ success: false, error: error.message });
         });
       break;
-  }
 
+      case 'updateLearningPathCompletion':
+        // 处理更新学习路径完成率
+        handleApiRequest(
+          `${baseUrl}/api/learning-path/${message.pathId}/completion`,
+          "PUT",
+          {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${message.token}`
+          },
+          { completion_rate: message.completionRate },
+          sendResponse
+        );
+      break;
+  }
+  
+ 
 });
 
 // 当标签页更新时，向内容脚本发送URL更新
