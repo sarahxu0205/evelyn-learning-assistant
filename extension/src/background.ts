@@ -114,20 +114,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         { completion_rate: message.completionRate },
         sendResponse
       );
-      break;
-      
-    case 'recordBehavior':
-      handleApiRequest(
-        `${baseUrl}/api/user-behavior`,
-        "POST",
-        {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${message.token}`
-        },
-        message.data,
-        sendResponse
-      );
-      break;
+      break;     
       
     case 'getUserBehaviorStats':
       handleApiRequest(
@@ -192,21 +179,64 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           sendResponse({ error: "无法获取当前标签页信息" });
         }
       });
-      return true; // 保持消息通道开放，以便异步发送响应
+      break; // 保持消息通道开放，以便异步发送响应
+
     case 'recordUserBehavior':
-      handleApiRequest(
-        `${baseUrl}/api/user-behavior`,
-        "POST",
-        {
+      console.log('收到记录用户行为请求:', message.data);
+      fetch(`${baseUrl}/api/user-behavior`, {
+        method: "POST",
+        headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${message.token}`
         },
-        message.data,
-        sendResponse
-      );
+        body: JSON.stringify(message.data),
+        mode: "cors",
+        credentials: "omit"
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log('行为记录API响应:', data);
+        sendResponse({success: true, data});
+      })
+      .catch(error => {
+        console.error("记录用户行为API请求失败:", error);
+        sendResponse({success: false, error: error.message});
+      });
+      
+      break;
+      
+      case 'getCurrentTabInfo':
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+          if (tabs && tabs[0]) {
+            sendResponse({ 
+              url: tabs[0].url, 
+              title: tabs[0].title 
+            });
+          } else {
+            sendResponse({ url: "", title: "" });
+          }
+        });
       break;
   }
-  
+
   // 返回true表示将异步发送响应
   return true;
+});
+
+// 当标签页更新时，向内容脚本发送URL更新
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  if (changeInfo.url) {
+    chrome.tabs.sendMessage(tabId, {
+      type: "updateCurrentUrl",
+      url: changeInfo.url,
+      title: tab.title || ""
+    }).catch(() => {
+      // 忽略错误，可能是内容脚本尚未加载
+    });
+  }
 });

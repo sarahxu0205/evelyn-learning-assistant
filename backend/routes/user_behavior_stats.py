@@ -30,14 +30,3 @@ def get_user_stats(current_user):
         return jsonify(stats), 200
     except Exception as e:
         return jsonify({'message': f'获取统计数据失败: {str(e)}'}), 500
-
-@user_behavior_stats_bp.route('/domains', methods=['GET'])
-@token_required
-def get_domain_stats(current_user):
-    """获取用户领域统计"""
-    try:
-        # 获取用户领域统计数据
-        stats = stats_service.get_domain_distribution(current_user.id)
-        return jsonify(stats), 200
-    except Exception as e:
-        return jsonify({'message': f'获取领域统计数据失败: {str(e)}'}), 500
