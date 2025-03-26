@@ -1,47 +1,13 @@
 from flask import Blueprint, request, jsonify
-import jwt
 import json
 from models.user import User, db
 from models.user_behavior import UserBehavior
-from functools import wraps  # 添加这一行
+from utils.auth import token_required  # 导入统一的装饰器
 
 user_bp = Blueprint('user', __name__)
 
-# 密钥用于JWT签名
-SECRET_KEY = 'evelyn-secret-key'
-
-def user_token_required(f):  # 修改装饰器名称
-    """验证JWT令牌的装饰器"""
-    @wraps(f)  # 添加 wraps 装饰器保留原函数信息
-    def decorated(*args, **kwargs):
-        token = request.headers.get('Authorization')
-        
-        if not token:
-            return jsonify({'message': '未授权的请求'}), 401
-        
-        if token.startswith('Bearer '):
-            token = token[7:]
-        
-        try:
-            data = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
-            user_id = data['user_id']
-            
-            # 检查用户是否存在
-            current_user = User.query.get(user_id)
-            if not current_user:
-                return jsonify({'message': '用户不存在'}), 401
-            
-        except jwt.ExpiredSignatureError:
-            return jsonify({'message': '令牌已过期'}), 401
-        except jwt.InvalidTokenError:
-            return jsonify({'message': '无效的令牌'}), 401
-        
-        return f(current_user, *args, **kwargs)
-    
-    return decorated
-
-@user_bp.route('/<user_id>/profile', methods=['GET'], endpoint='get_profile')  # 添加唯一端点名称
-@user_token_required  # 使用新的装饰器名称
+@user_bp.route('/<user_id>/profile', methods=['GET'], endpoint='get_profile')
+@token_required  # 使用统一的装饰器
 def get_user_profile(current_user, user_id):
     """获取用户画像"""
     # 验证用户ID - 将user_id转换为整数再比较
@@ -99,7 +65,7 @@ def get_user_profile(current_user, user_id):
     return jsonify(profile), 200
 
 @user_bp.route('/<user_id>/profile', methods=['PUT'], endpoint='update_profile')
-@user_token_required
+@token_required
 def update_user_profile(current_user, user_id):
     """更新用户画像"""
     # 验证用户ID - 将user_id转换为整数再比较

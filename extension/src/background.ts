@@ -247,7 +247,31 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           console.error("获取用户画像出错:", error);
           sendResponse({ success: false, error: error.message });
         });
+      break;
 
+      case 'updateUserProfile':
+        // 处理更新用户画像的消息   
+        fetch(`${baseUrl}/api/user/${message.userId}/profile`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${message.token}`
+          },
+          body: JSON.stringify(message.data)
+        })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`更新用户画像失败: ${response.status}`);
+           }
+          return response.json();
+        })
+        .then(data => {
+          sendResponse({ success: true, data });
+        })
+        .catch(error => {
+          console.error('更新用户画像出错:', error);
+          sendResponse({ success: false, error: error.message });
+        });
       break;
   }
 

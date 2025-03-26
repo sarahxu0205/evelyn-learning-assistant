@@ -108,7 +108,7 @@ class UserBehaviorStatsService:
         
         # 统计关键词频率
         keyword_counter = Counter(keywords)
-        logger.info(f"关键词: {keywords} 统计: {keyword_counter}")
+        #logger.info(f"关键词: {keywords} 统计: {keyword_counter}")
         
         # 扩展并优化领域映射
         domain_mapping = {
