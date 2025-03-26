@@ -119,9 +119,10 @@ export const LearningStats = () => {
     )
   }
   
-  // 计算总学习时间的小时和分钟
-  const hours = Math.floor(stats.totalLearningTime / 60)
-  const minutes = stats.totalLearningTime % 60
+  // 计算总学习时间的小时和分钟（后端返回的是秒）
+  const totalMinutes = Math.floor(stats.totalLearningTime / 60)
+  const hours = Math.floor(totalMinutes / 60)
+  const minutes = totalMinutes % 60
   
   // 配置周学习时间柱状图
   const weeklyConfig = {
@@ -187,24 +188,47 @@ export const LearningStats = () => {
         bodyStyle={{ padding: '16px' }}
       >
         <div style={{ maxHeight: 300, overflowY: 'auto' }}>
-          {stats.weeklyLearningTime.map((item, index) => (
-            <div key={index} style={{ marginBottom: index === stats.weeklyLearningTime.length - 1 ? 0 : 16 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                <span style={{ fontWeight: 'bold' }}>{item.day}</span>
-                <span style={{ color: '#1890ff', fontWeight: 'bold' }}>{item.minutes} 分钟</span>
+          {stats.weeklyLearningTime.map((item, index) => {
+            // 将秒转换为分钟
+            const minutesValue = Math.floor(item.minutes / 60);
+            
+            // 设置一个合理的最大值作为参考（例如360分钟）
+            // 这样即使只有一天有学习记录，进度条也不会显示为满的
+            const referenceMaxMinutes = 360; 
+            
+            // 计算进度百分比，使用参考最大值
+            const progressPercent = Math.min((minutesValue / referenceMaxMinutes) * 100, 100);
+            
+            return (
+              <div key={index} style={{ marginBottom: index === stats.weeklyLearningTime.length - 1 ? 0 : 16 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                  <span style={{ fontWeight: 'bold' }}>{item.day}</span>
+                  <span style={{ color: '#1890ff', fontWeight: 'bold' }}>{minutesValue} 分钟</span>
+                </div>
+                {minutesValue > 0 ? (
+                  <Progress 
+                    percent={progressPercent} 
+                    status="active" 
+                    strokeColor={{
+                      '0%': '#108ee9',
+                      '100%': '#87d068',
+                    }}
+                    strokeWidth={10}
+                    format={() => ''}
+                  />
+                ) : (
+                  <div 
+                    style={{ 
+                      height: '10px', 
+                      backgroundColor: '#f5f5f5', 
+                      borderRadius: '5px',
+                      width: '100%'
+                    }}
+                  />
+                )}
               </div>
-              <Progress 
-                percent={Math.round((item.minutes / Math.max(...stats.weeklyLearningTime.map(i => i.minutes))) * 100)} 
-                status="active" 
-                strokeColor={{
-                  '0%': '#108ee9',
-                  '100%': '#87d068',
-                }}
-                strokeWidth={10}
-                format={() => ''}
-              />
-            </div>
-          ))}
+            );
+          })}
         </div>
       </Card>
       

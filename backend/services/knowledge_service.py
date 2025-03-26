@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 import json
 import uuid
 import requests
-from models.learning_path import LearningPath, LearningStage, db
+from models.learning_path import LearningPath, db
 
 class KnowledgeService:
     """知识服务，用于生成学习路径"""
@@ -93,42 +93,6 @@ class KnowledgeService:
             # 如果调用失败，返回一个默认的学习路径
             print(f"生成学习路径失败: {str(e)}")
             return self._generate_default_path(goal)
-    
-    def save_learning_path(self, user_id, goal, path_data):
-        """保存学习路径到数据库"""
-        try:
-            # 创建学习路径
-            learning_path = LearningPath(
-                user_id=user_id,
-                title=path_data.get('title', '未命名学习路径'),
-                goal=goal,
-                path_data=json.dumps(path_data),
-                created_at=datetime.datetime.now(),
-                completion_rate=0.0
-            )
-            
-            db.session.add(learning_path)
-            db.session.flush()  # 获取ID
-            
-            # 创建学习阶段
-            for i, stage in enumerate(path_data.get('stages', [])):
-                learning_stage = LearningStage(
-                    path_id=learning_path.id,
-                    title=stage.get('title', f'阶段 {i+1}'),
-                    description=stage.get('description', ''),
-                    order=i,
-                    is_completed=False
-                )
-                db.session.add(learning_stage)
-            
-            db.session.commit()
-            
-            return learning_path.id
-            
-        except Exception as e:
-            db.session.rollback()
-            print(f"保存学习路径失败: {str(e)}")
-            raise
     
     def _generate_default_path(self, goal):
         """生成默认学习路径"""
@@ -346,27 +310,13 @@ class KnowledgeService:
             id=path_id,
             user_id=user_id,
             title=learning_path['title'],
+            estimated_time=learning_path['estimated_time'],
             goal=goal_text,
             path_data=json.dumps(learning_path, ensure_ascii=False),
-            created_at=datetime.datetime.now(),
-            completion_rate=0.0
+            completion_rate=0
         )
         
-        db.session.add(new_path)
-        
-        # 创建学习阶段记录
-        for i, stage in enumerate(learning_path['stages']):
-            new_stage = LearningStage(
-                id=str(uuid.uuid4()),
-                path_id=path_id,
-                title=stage['title'],
-                description=stage['description'],
-                order=i,
-                is_completed=False,
-                resources=json.dumps(stage['resources'], ensure_ascii=False)
-            )
-            db.session.add(new_stage)
-        
+        db.session.add(new_path) 
         db.session.commit()
         logger.info(f"已保存用户 {user_id} 的学习路径")
         

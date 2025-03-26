@@ -430,7 +430,7 @@ const UserProfilePage: React.FC = () => {
               <Statistic 
                 title={<span style={{ fontSize: '14px', color: '#666' }}>总浏览时长</span>}
                 value={profile.behavior_analysis.total_duration < 60 ? 
-                  "不到一分钟" : 
+                  "不到1分钟" : 
                   `${Math.floor(profile.behavior_analysis.total_duration / 60)}分钟`} 
                 prefix={<ClockCircleOutlined style={{ color: '#722ed1' }} />} 
                 valueStyle={{ fontWeight: 'bold' }}
