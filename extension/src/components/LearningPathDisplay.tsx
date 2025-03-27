@@ -40,8 +40,13 @@ export const LearningPathDisplay = ({ path, onUpdatePath }: LearningPathDisplayP
   const [completionRate, setCompletionRate] = useState<number>(path.completion_rate || 0)
   const [updating, setUpdating] = useState<boolean>(false)
   
-  // 添加 useEffect 监听 path 变化
+  // 添加安全检查，确保path是有效对象
   useEffect(() => {
+    if (!path || typeof path !== 'object') {
+      console.error('无效的学习路径数据:', path);
+      return;
+    }
+    
     // 当 path 变化时，更新 completionRate 状态
     setCompletionRate(path.completion_rate || 0);
   }, [path, path.id, path.completion_rate]);
@@ -132,8 +137,12 @@ export const LearningPathDisplay = ({ path, onUpdatePath }: LearningPathDisplayP
     }
   }
   
-  // 计算当前阶段
+  // 计算当前阶段 - 添加安全检查
   const getCurrentStage = () => {
+    if (!path || !path.stages || !Array.isArray(path.stages) || path.stages.length === 0) {
+      return 0;
+    }
+    
     if (!path.completion_rate || path.completion_rate === 0) return 0
     if (path.completion_rate === 100) return path.stages.length - 1
     
@@ -142,11 +151,20 @@ export const LearningPathDisplay = ({ path, onUpdatePath }: LearningPathDisplayP
     return Math.min(stageIndex, path.stages.length - 1)
   }
   
+  // 添加安全检查，确保path和stages是有效的
+  if (!path || !path.stages || !Array.isArray(path.stages)) {
+    return (
+      <div style={{ padding: '20px', textAlign: 'center' }}>
+        <p>无法显示学习路径，数据格式不正确</p>
+      </div>
+    );
+  }
+  
   return (
     <div className="learning-path-display" style={{ padding: '0 16px' }}>
-      <Title level={4} style={{ marginBottom: '16px', textAlign: 'left' }}>{path.title}</Title>
+      <Title level={4} style={{ marginBottom: '16px', textAlign: 'left' }}>{path.title || '未命名学习路径'}</Title>
       
-      <Paragraph style={{ textAlign: 'left', marginBottom: '16px' }}>{path.description}</Paragraph>
+      <Paragraph style={{ textAlign: 'left', marginBottom: '16px' }}>{path.description || '无描述'}</Paragraph>
       
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <Paragraph style={{ textAlign: 'left', marginBottom: 0 }}>
@@ -240,12 +258,12 @@ export const LearningPathDisplay = ({ path, onUpdatePath }: LearningPathDisplayP
           {path.stages.map((stage, index) => (
             <Step
               key={index}
-              title={<Text strong>{stage.name}</Text>}
+              title={<Text strong>{stage.name || `阶段 ${index+1}`}</Text>}
               description={
                 <div style={{ textAlign: 'left' }}>
-                  <Paragraph style={{ margin: '8px 0' }}>{stage.description}</Paragraph>
+                  <Paragraph style={{ margin: '8px 0' }}>{stage.description || '无描述'}</Paragraph>
                   <Tag icon={<ClockCircleOutlined />} color="blue">
-                    预计时间: {stage.estimated_time}
+                    预计时间: {stage.estimated_time || '未知'}
                   </Tag>
                 </div>
               }
@@ -260,22 +278,22 @@ export const LearningPathDisplay = ({ path, onUpdatePath }: LearningPathDisplayP
           <Panel 
             header={
               <Space>
-                <Text strong>{`${stage.name}`}</Text>
+                <Text strong>{`${stage.name || `阶段 ${index+1}`}`}</Text>
                 <Tag icon={<ClockCircleOutlined />} color="blue">
-                  {stage.estimated_time}
+                  {stage.estimated_time || '未知'}
                 </Tag>
               </Space>
             } 
             key={index}
           >
-            <Paragraph style={{ marginBottom: '16px' }}>{stage.description}</Paragraph>
+            <Paragraph style={{ marginBottom: '16px' }}>{stage.description || '无描述'}</Paragraph>
             
             <Title level={5} style={{ marginBottom: '12px' }}>学习目标</Title>
             <List
               size="small"
-              dataSource={stage.goals}
+              dataSource={stage.goals || []}
               renderItem={(goal, goalIndex) => (
-                <List.Item style={{ padding: '8px 0', borderBottom: goalIndex === stage.goals.length - 1 ? 'none' : '1px solid #f0f0f0' }}>
+                <List.Item style={{ padding: '8px 0', borderBottom: goalIndex === (stage.goals?.length || 0) - 1 ? 'none' : '1px solid #f0f0f0' }}>
                   <Text>{`${goalIndex + 1}. ${goal}`}</Text>
                 </List.Item>
               )}
@@ -285,7 +303,7 @@ export const LearningPathDisplay = ({ path, onUpdatePath }: LearningPathDisplayP
             <Title level={5} style={{ marginBottom: '12px' }}>推荐资源</Title>
             <List
               grid={{ gutter: 16, column: 1 }}
-              dataSource={stage.resources}
+              dataSource={stage.resources || []}
               renderItem={(resource) => (
                 <List.Item>
                   <Card 
@@ -299,30 +317,30 @@ export const LearningPathDisplay = ({ path, onUpdatePath }: LearningPathDisplayP
                       title={
                         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px' }}>
                           <a 
-                            href={resource.link} 
+                            href={resource.link || '#'} 
                             target="_blank" 
                             rel="noopener noreferrer"
                             style={{ fontWeight: 'bold', color: '#1890ff' }}
                           >
-                            {resource.name}
+                            {resource.name || '未命名资源'}
                           </a>
                           <Tag 
-                            color={getResourceTypeColor(resource.type)} 
-                            icon={getResourceIcon(resource.type)}
+                            color={getResourceTypeColor(resource.type || '其他')} 
+                            icon={getResourceIcon(resource.type || '其他')}
                           >
-                            {resource.type}
+                            {resource.type || '其他'}
                           </Tag>
                           <Tag 
-                            color={parseInt(resource.price) > 0 ? "gold" : "green"} 
+                            color={resource.price && !isNaN(parseInt(resource.price)) && parseInt(resource.price) > 0 ? "gold" : "green"} 
                             icon={<DollarOutlined />}
                           >
-                            {parseInt(resource.price) > 0 ? `¥${resource.price}` : '免费'}
+                            {resource.price && !isNaN(parseInt(resource.price)) && parseInt(resource.price) > 0 ? `¥${resource.price}` : '免费'}
                           </Tag>
                         </div>
                       }
                       description={
                         <Paragraph style={{ margin: '8px 0 0 0' }}>
-                          {resource.description}
+                          {resource.description || '无描述'}
                         </Paragraph>
                       }
                     />
