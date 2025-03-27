@@ -32,8 +32,7 @@
     "permissions": [
       "storage",
       "tabs",
-      "activeTab",
-      "http://127.0.0.1:5000/*"
+      "activeTab"
     ],
     "action": {
       "default_popup": "popup.html"
