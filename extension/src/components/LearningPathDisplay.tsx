@@ -1,5 +1,5 @@
-import { Steps, Collapse, Typography, Tag, List, Card, Button, Space, Slider, Progress, message } from "antd"
-import { ClockCircleOutlined, DollarOutlined, BookOutlined, ToolOutlined, ReadOutlined, VideoCameraOutlined, CheckCircleOutlined } from "@ant-design/icons"
+import { Steps, Collapse, Typography, Tag, List, Card, Button, Space, Slider, Progress, message, Alert, Modal } from "antd"
+import { ClockCircleOutlined, DollarOutlined, BookOutlined, ToolOutlined, ReadOutlined, VideoCameraOutlined, CheckCircleOutlined, WarningOutlined, SyncOutlined } from "@ant-design/icons"
 import { useState, useEffect } from "react"
 
 const { Step } = Steps
@@ -39,6 +39,14 @@ interface LearningPathDisplayProps {
 export const LearningPathDisplay = ({ path, onUpdatePath }: LearningPathDisplayProps) => {
   const [completionRate, setCompletionRate] = useState<number>(path.completion_rate || 0)
   const [updating, setUpdating] = useState<boolean>(false)
+  // 添加挫折检测相关状态
+  const [frustrationChecked, setFrustrationChecked] = useState<boolean>(false)
+  const [hasFrustration, setHasFrustration] = useState<boolean>(false)
+  const [frustratedSkills, setFrustratedSkills] = useState<string[]>([])
+  const [checkingFrustration, setCheckingFrustration] = useState<boolean>(false)
+  const [alternativePath, setAlternativePath] = useState<any>(null)
+  const [generatingAlternative, setGeneratingAlternative] = useState<boolean>(false)
+  const [showAlternativeModal, setShowAlternativeModal] = useState<boolean>(false)
   
   // 添加安全检查，确保path是有效对象
   useEffect(() => {
@@ -49,7 +57,136 @@ export const LearningPathDisplay = ({ path, onUpdatePath }: LearningPathDisplayP
     
     // 当 path 变化时，更新 completionRate 状态
     setCompletionRate(path.completion_rate || 0);
+    
+    // 重置挫折检测状态
+    setFrustrationChecked(false);
+    setHasFrustration(false);
+    setFrustratedSkills([]);
+    setAlternativePath(null);
+    
+    // 如果有路径ID，自动检测挫折
+    if (path.id) {
+      detectFrustration();
+    }
   }, [path, path.id, path.completion_rate]);
+  
+  // 添加检测挫折的函数
+  const detectFrustration = async () => {
+    if (!path.id) {
+      console.error('无法检测挫折：缺少学习路径ID');
+      return;
+    }
+    
+    setCheckingFrustration(true);
+    
+    try {
+      // 获取用户令牌
+      const userTokenResult = await new Promise<{userToken?: string}>((resolve) => {
+        chrome.storage.local.get(['userToken'], (result) => {
+          resolve(result);
+        });
+      });
+      
+      if (!userTokenResult.userToken) {
+        console.warn('用户未登录，无法检测挫折');
+        setCheckingFrustration(false);
+        return;
+      }
+      
+      // 发送消息到后台脚本进行API调用
+      chrome.runtime.sendMessage(
+        {
+          type: 'detectFrustration',
+          pathId: path.id,
+          token: userTokenResult.userToken
+        },
+        (response) => {
+          setCheckingFrustration(false);
+          setFrustrationChecked(true);
+          
+          if (response && response.success) {
+            setHasFrustration(response.data.has_frustration);
+            setFrustratedSkills(response.data.frustrated_skills || []);
+            console.log('挫折检测结果:', response.data);
+          } else {
+            console.error('挫折检测失败:', response?.error || '未知错误');
+          }
+        }
+      );
+    } catch (error) {
+      console.error('检测挫折出错:', error);
+      setCheckingFrustration(false);
+    }
+  };
+  
+  // 添加生成备选路径的函数
+  const generateAlternativePath = async () => {
+    if (!path.id) {
+      message.error('无法生成备选路径：缺少学习路径ID');
+      return;
+    }
+    
+    setGeneratingAlternative(true);
+    
+    try {
+      // 获取用户令牌
+      const userTokenResult = await new Promise<{userToken?: string}>((resolve) => {
+        chrome.storage.local.get(['userToken'], (result) => {
+          resolve(result);
+        });
+      });
+      
+      if (!userTokenResult.userToken) {
+        message.error('请先登录后再生成备选路径');
+        setGeneratingAlternative(false);
+        return;
+      }
+      
+      // 发送消息到后台脚本进行API调用
+      chrome.runtime.sendMessage(
+        {
+          type: 'generateAlternativePath',
+          pathId: path.id,
+          token: userTokenResult.userToken
+        },
+        (response) => {
+          setGeneratingAlternative(false);
+          
+          if (response && response.success) {
+            setAlternativePath(response.data.adjusted_path);
+            setShowAlternativeModal(true);
+            message.success('备选学习路径生成成功');
+          } else {
+            message.error(response?.error || '生成备选路径失败，请稍后再试');
+          }
+        }
+      );
+    } catch (error) {
+      console.error('生成备选路径出错:', error);
+      message.error('生成失败，请稍后再试');
+      setGeneratingAlternative(false);
+    }
+  };
+  
+  // 添加应用备选路径的函数
+  const applyAlternativePath = () => {
+    if (!alternativePath) return;
+    
+    // 更新本地路径数据
+    if (onUpdatePath) {
+      const updatedPath = {
+        ...path,
+        title: alternativePath.title || path.title,
+        description: alternativePath.description || path.description,
+        estimated_time: alternativePath.estimated_time || path.estimated_time,
+        stages: alternativePath.stages || path.stages
+      };
+      
+      onUpdatePath(updatedPath);
+      setShowAlternativeModal(false);
+      message.success('已应用备选学习路径');
+    }
+  };
   
   const getResourceIcon = (type: string) => {
     switch (type.toLowerCase()) {
@@ -165,6 +302,37 @@ export const LearningPathDisplay = ({ path, onUpdatePath }: LearningPathDisplayP
       <Title level={4} style={{ marginBottom: '16px', textAlign: 'left' }}>{path.title || '未命名学习路径'}</Title>
       
       <Paragraph style={{ textAlign: 'left', marginBottom: '16px' }}>{path.description || '无描述'}</Paragraph>
+      
+      {/* 添加挫折检测提示 */}
+      {frustrationChecked && hasFrustration && (
+        <Alert
+          message="学习挫折检测"
+          description={
+            <div>
+              <p>我们检测到您在以下技能学习中可能遇到了困难：</p>
+              <div style={{ margin: '8px 0' }}>
+                {frustratedSkills.map((skill, index) => (
+                  <Tag color="volcano" key={index} style={{ margin: '4px' }}>{skill}</Tag>
+                ))}
+              </div>
+              <p>我们可以为您生成一条更适合的学习路径，帮助您更顺利地掌握这些技能。</p>
+              <Button 
+                type="primary" 
+                onClick={generateAlternativePath} 
+                loading={generatingAlternative}
+                icon={<SyncOutlined />}
+                style={{ marginTop: '8px' }}
+              >
+                生成备选学习路径
+              </Button>
+            </div>
+          }
+          type="warning"
+          showIcon
+          icon={<WarningOutlined />}
+          style={{ marginBottom: '24px', textAlign: 'left' }}
+        />
+      )}
       
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <Paragraph style={{ textAlign: 'left', marginBottom: 0 }}>
@@ -351,6 +519,57 @@ export const LearningPathDisplay = ({ path, onUpdatePath }: LearningPathDisplayP
           </Panel>
         ))}
       </Collapse>
+      
+      {/* 添加备选路径模态框 - 正确位置 */}
+      <Modal
+        title="备选学习路径"
+        open={showAlternativeModal}
+        onCancel={() => setShowAlternativeModal(false)}
+        footer={[
+          <Button key="cancel" onClick={() => setShowAlternativeModal(false)}>
+            取消
+          </Button>,
+          <Button key="apply" type="primary" onClick={applyAlternativePath}>
+            应用此路径
+          </Button>
+        ]}
+        width={800}
+      >
+        {alternativePath ? (
+          <div style={{ maxHeight: '60vh', overflow: 'auto' }}>
+            <Title level={5}>{alternativePath.title || '未命名学习路径'}</Title>
+            <Paragraph>{alternativePath.description || '无描述'}</Paragraph>
+            
+            <div style={{ marginBottom: '16px' }}>
+              <Tag icon={<ClockCircleOutlined />} color="blue">
+                预计学习时间: {alternativePath.estimated_time || '未知'}
+              </Tag>
+            </div>
+            
+            <Title level={5}>学习阶段</Title>
+            <Steps direction="vertical" current={0}>
+              {(alternativePath.stages || []).map((stage: any, index: number) => (
+                <Step
+                  key={index}
+                  title={<Text strong>{stage.name || `阶段 ${index+1}`}</Text>}
+                  description={
+                    <div>
+                      <Paragraph>{stage.description || '无描述'}</Paragraph>
+                      <Tag icon={<ClockCircleOutlined />} color="blue">
+                        预计时间: {stage.estimated_time || '未知'}
+                      </Tag>
+                    </div>
+                  }
+                />
+              ))}
+            </Steps>
+          </div>
+        ) : (
+          <div style={{ textAlign: 'center', padding: '20px' }}>
+            <p>加载备选路径失败</p>
+          </div>
+        )}
+      </Modal>
     </div>
   )
 }

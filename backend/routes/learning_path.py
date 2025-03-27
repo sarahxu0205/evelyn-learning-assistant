@@ -62,67 +62,6 @@ def get_learning_paths(current_user):
     
     return jsonify(result), 200
 
-def get_personalized_path(user_id, path_id, original_path_data):
-    """获取个性化调整后的学习路径
-    
-    Args:
-        user_id: 用户ID
-        path_id: 学习路径ID
-        original_path_data: 原始路径数据
-        
-    Returns:
-        dict: 包含调整信息的字典，格式为:
-        {
-            'adjusted_path': 调整后的路径数据,
-            'adjustment_type': 调整类型 ('frustration' 或 'behavior'),
-            'frustrated_skills': 检测到的挫折技能列表
-        }
-        如果没有调整，则返回 None
-    """
-    # 初始化个性化服务
-    personalization_service = PersonalizationService()
-    
-    # 检测用户是否遇到挫折
-    frustrated_skills = personalization_service.detect_frustration(user_id)
-    
-    logger.info(f"检测结果：{frustrated_skills}")
-    
-    # 根据用户行为调整学习路径
-    adjusted_path_data = None
-    adjustment_type = None
-    
-    if frustrated_skills:
-        # 如果检测到挫折，生成替代学习路径
-        adjusted_path_data = personalization_service.generate_alternative_path(
-            user_id, path_id, frustrated_skills
-        )
-        if adjusted_path_data:
-            adjustment_type = "frustration"
-    else:
-        # 根据用户行为调整学习路径
-        adjusted_path_data = personalization_service.adjust_path_based_on_behavior(
-            user_id, path_id
-        )
-        if adjusted_path_data:
-            adjustment_type = "behavior"
-    
-    # 如果有调整，解析调整后的路径数据
-    if adjusted_path_data:
-        try:
-            adjusted_path = json.loads(adjusted_path_data)
-            
-            # 返回调整信息
-            return {
-                'adjusted_path': adjusted_path,
-                'adjustment_type': adjustment_type,
-                'frustrated_skills': frustrated_skills if frustrated_skills else []
-            }
-        except Exception as e:
-            print(f"解析调整后的路径数据失败: {str(e)}")
-    
-    # 如果没有调整或解析失败，返回None
-    return None
-
 @learning_path_bp.route('/<int:path_id>', methods=['GET'])
 @token_required
 def get_learning_path(current_user, path_id):
@@ -136,12 +75,8 @@ def get_learning_path(current_user, path_id):
     if path.user_id != current_user.id:
         return jsonify({'message': '无权访问此学习路径'}), 403
     
-    
     # 获取原始路径数据
     original_path_data = path.get_path_data()
-    
-    # 获取个性化调整后的路径
-    # personalized_info = get_personalized_path(current_user.id, path_id, original_path_data)
     
     # 构建响应数据
     response_data = {
@@ -153,14 +88,70 @@ def get_learning_path(current_user, path_id):
         'updated_at': path.updated_at.isoformat()
     }
 
-    '''
-    # 如果有个性化调整，添加到响应中
-    if personalized_info:
-        response_data['adjusted_path'] = personalized_info['adjusted_path']
-        response_data['adjustment_type'] = personalized_info['adjustment_type']
-        response_data['frustrated_skills'] = personalized_info['frustrated_skills']
-    '''
     return jsonify(response_data), 200
+
+# 新增：检测用户是否遇到挫折的接口
+@learning_path_bp.route('/<int:path_id>/detect-frustration', methods=['GET'])
+@token_required
+def detect_frustration(current_user, path_id):
+    """检测用户是否在当前学习路径中遇到挫折"""
+    # 验证学习路径存在且属于当前用户
+    path = LearningPath.query.filter_by(id=path_id, user_id=current_user.id).first()
+    if not path:
+        return jsonify({'message': '学习路径不存在'}), 404
+    
+    # 初始化个性化服务
+    personalization_service = PersonalizationService()
+    
+    # 检测用户是否遇到挫折
+    frustrated_skills = personalization_service.detect_frustration(current_user.id)
+    
+    logger.info(f"用户 {current_user.id} 的挫折检测结果：{frustrated_skills}")
+    
+    return jsonify({
+        'has_frustration': bool(frustrated_skills),
+        'frustrated_skills': frustrated_skills if frustrated_skills else []
+    }), 200
+
+# 新增：生成备选学习路径的接口
+@learning_path_bp.route('/<int:path_id>/generate-alternative', methods=['POST'])
+@token_required
+def generate_alternative_path(current_user, path_id):
+    """根据用户挫折情况生成备选学习路径"""
+    # 验证学习路径存在且属于当前用户
+    path = LearningPath.query.filter_by(id=path_id, user_id=current_user.id).first()
+    if not path:
+        return jsonify({'message': '学习路径不存在'}), 404
+    
+    # 初始化个性化服务
+    personalization_service = PersonalizationService()
+    
+    # 检测用户是否遇到挫折
+    frustrated_skills = personalization_service.detect_frustration(current_user.id)
+    
+    if not frustrated_skills:
+        return jsonify({'message': '未检测到学习挫折，无需生成备选路径'}), 400
+    
+    # 生成备选学习路径
+    adjusted_path_data = personalization_service.generate_alternative_path(
+        current_user.id, path_id, frustrated_skills
+    )
+    
+    if not adjusted_path_data:
+        return jsonify({'message': '生成备选学习路径失败'}), 500
+    
+    try:
+        # 解析调整后的路径数据
+        adjusted_path = json.loads(adjusted_path_data)
+        
+        return jsonify({
+            'original_path_id': path_id,
+            'adjusted_path': adjusted_path,
+            'frustrated_skills': frustrated_skills
+        }), 200
+    except Exception as e:
+        logger.error(f"解析调整后的路径数据失败: {str(e)}")
+        return jsonify({'message': '解析备选学习路径失败'}), 500
 
 @learning_path_bp.route('/<int:path_id>/completion', methods=['PUT'])
 @token_required

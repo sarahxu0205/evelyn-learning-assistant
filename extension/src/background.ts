@@ -196,6 +196,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       break; // 保持消息通道开放，以便异步发送响应
 
     case 'recordUserBehavior':
+    case 'recordUserBehaviorRetry':
       console.log('收到记录用户行为请求:', message.data);
       fetch(`${baseUrl}/api/user-behavior`, {
         method: "POST",
@@ -222,6 +223,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         sendResponse({success: false, error: error.message});
       });
       
+      return true; // 保持消息通道开放，以便异步发送响应
       break;
       
       case 'getCurrentTabInfo':
@@ -300,6 +302,43 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           { completion_rate: message.completionRate },
           sendResponse
         );
+      break;
+      case 'detectFrustration':
+        // 处理检测挫折的请求
+        fetch(`${baseUrl}/api/learning-path/${message.pathId}/detect-frustration`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${message.token}`
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          sendResponse({ success: true, data });
+        })
+        .catch(error => {
+          console.error('检测挫折失败:', error);
+          sendResponse({ success: false, error: error.message || '检测挫折失败' });
+        });
+      break;
+
+      case 'generateAlternativePath':
+        // 处理生成备选路径的请求
+        fetch(`${baseUrl}/api/learning-path/${message.pathId}/generate-alternative`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          sendResponse({ success: true, data });
+        })
+        .catch(error => {
+          console.error('生成备选路径失败:', error);
+          sendResponse({ success: false, error: error.message || '生成备选路径失败' });
+        });
       break;
   }
   

@@ -308,11 +308,7 @@ const EvelynOverlay: React.FC = () => {
         width={400}
         className="evelyn-drawer"
         closable={false}
-        styles={{ 
-          body: { padding: 0, height: '100%', overflow: 'hidden' },
-          wrapper: { position: 'fixed', top: 0, right: 0, bottom: 0 },
-          content: { boxShadow: '0 0 10px rgba(0,0,0,0.2)' }
-        }}
+        styles={{ body: { padding: 0, height: '100%', overflow: 'hidden' } }}
         mask={false}
         getContainer={false}
       >
@@ -335,43 +331,15 @@ const EvelynOverlay: React.FC = () => {
 // 确保正确导出组件
 export default EvelynOverlay;
 
-// 修改 getStyle 函数，使用 Plasmo 推荐的方式
+// 添加 getStyle 导出函数
 export const getStyle = () => {
-  // 返回一个样式对象而不是字符串
   return {
-    // 使用 CSS-in-JS 格式
-    ".__plasmo-cs-overlay": {
-      display: "none"  // 隐藏任何可能的调试输出
-    },
-    ".evelyn-drawer": {
-      position: "fixed",
-      zIndex: 9999,
-      height: "100vh",
-      top: 0,
-      right: 0
-    },
-    ".ant-drawer-content-wrapper": {
-      height: "100vh !important",
-      position: "fixed !important",
-      top: "0 !important",
-      right: "0 !important"
-    },
-    ".ant-drawer-content": {
-      height: "100vh !important",
-      overflow: "hidden !important"
-    },
-    ".ant-drawer-body": {
-      padding: "0 !important",
-      height: "100vh !important",
-      overflow: "auto !important"
-    },
-    "body": {
-      overflow: "auto !important"
-    }
+    position: "fixed",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 9999,
+    pointerEvents: "none", // 允许点击穿透到底层页面
   };
-};
-
-// 添加一个空的 getRootContainer 函数，防止 Plasmo 自动创建容器
-export const getRootContainer = () => {
-  return null;
 };
