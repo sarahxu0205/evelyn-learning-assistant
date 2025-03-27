@@ -319,14 +319,16 @@ const UserProfilePage: React.FC = () => {
   }
 
   return (
-    <div className="user-profile-container" style={{ maxWidth: '800px', margin: '0 auto' }}>
+    <div className="user-profile-container" style={{ maxWidth: '800px', margin: '0 auto', padding: '0 16px' }}>
       <div style={{ 
         display: 'flex', 
         justifyContent: 'space-between', 
         alignItems: 'center', 
         marginBottom: 24,
         borderBottom: '1px solid #f0f0f0',
-        paddingBottom: 16
+        paddingBottom: 10,
+        paddingLeft: 8,  // 添加左侧内边距，与卡片标题对齐
+        paddingRight: 8  // 添加右侧内边距，保持对称
       }}>
         <Title level={4} style={{ margin: 0 }}>我的学习画像</Title>
         {!isEditing && (
