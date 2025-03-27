@@ -145,10 +145,10 @@ export const LearningStats = () => {
   }
   
   return (
-    <div className="learning-stats" style={{ padding: '16px' }}>
-      <Title level={4} style={{ marginBottom: '24px', textAlign: 'center' }}>学习统计</Title>
+    <div className="learning-stats" style={{ padding: '8px' }}>
+      <Title level={4} style={{ marginBottom: '20px', textAlign: 'center' }}>学习统计</Title>
       
-      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+      <Row gutter={[12, 12]} style={{ marginBottom: 20 }}>
         <Col span={12}>
           <Card hoverable style={{ height: '100%', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
             <div style={{ textAlign: 'center' }}>
@@ -238,23 +238,27 @@ export const LearningStats = () => {
         headStyle={{ borderBottom: '1px solid #f0f0f0', padding: '12px 16px' }}
         bodyStyle={{ padding: '16px' }}
       >
-        {stats.domainDistribution.map((item, index) => (
-          <div key={index} style={{ marginBottom: index === stats.domainDistribution.length - 1 ? 0 : 16 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-              <span style={{ fontWeight: 'bold' }}>{item.domain}</span>
-              <span style={{ color: '#722ed1', fontWeight: 'bold' }}>{item.percentage}%</span>
+        {stats.domainDistribution && stats.domainDistribution.length > 0 ? (
+          stats.domainDistribution.map((item, index) => (
+            <div key={index} style={{ marginBottom: index === stats.domainDistribution.length - 1 ? 0 : 16 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                <span style={{ fontWeight: 'bold' }}>{item.domain}</span>
+                <span style={{ color: '#722ed1', fontWeight: 'bold' }}>{item.percentage}%</span>
+              </div>
+              <Progress 
+                percent={item.percentage} 
+                status="active" 
+                strokeColor={{
+                  from: '#722ed1',
+                  to: '#1890ff',
+                }}
+                strokeWidth={10}
+              />
             </div>
-            <Progress 
-              percent={item.percentage} 
-              status="active" 
-              strokeColor={{
-                from: '#722ed1',
-                to: '#1890ff',
-              }}
-              strokeWidth={10}
-            />
-          </div>
-        ))}
+          ))
+        ) : (
+          <Empty description="暂无学习领域数据" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+        )}
       </Card>
     </div>
   )

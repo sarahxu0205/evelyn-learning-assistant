@@ -353,9 +353,7 @@ class UserBehaviorStatsService:
         
         # 如果没有任何领域，返回默认值
         if not domain_count:
-            return [
-                {"domain": "编程", "percentage": 100}
-            ]
+            return []  # 返回空数组，表示没有任何领域数据
         
         # 计算百分比
         total = sum(domain_count.values())

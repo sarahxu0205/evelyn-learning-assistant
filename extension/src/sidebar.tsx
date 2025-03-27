@@ -25,11 +25,20 @@ const Sidebar = () => {
       setAuthModalVisible(true)
     }
     
+    // 添加监听 chrome.storage 变化的事件
+    const handleStorageChange = (changes: any, namespace: string) => {
+      if (namespace === 'local' && changes.userToken) {
+        setIsLoggedIn(!!changes.userToken.newValue)
+      }
+    }
+    
     window.addEventListener("evelyn:show-login", handleShowLogin)
+    chrome.storage.onChanged.addListener(handleStorageChange)
     
     // 清理函数
     return () => {
       window.removeEventListener("evelyn:show-login", handleShowLogin)
+      chrome.storage.onChanged.removeListener(handleStorageChange)
     }
   }, [])
   
