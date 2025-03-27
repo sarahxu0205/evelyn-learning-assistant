@@ -11,7 +11,7 @@ Evelyn 是一个智能学习助手浏览器插件，旨在帮助用户规划个�
 1. 确保已安装 Python 3.7 或更高版本
 2. 打开终端，进入后端目录：
    ```bash
-   cd /evelyn3/backend
+   cd /evelyn/backend
    ```
 3. 安装依赖：
    ```bash
@@ -28,7 +28,7 @@ Evelyn 是一个智能学习助手浏览器插件，旨在帮助用户规划个�
 1. 确保已安装 Node.js 18.17.1 或更高版本（注意：使用较低版本如14.18.2可能会导致前端服务无法正常启动）
 2. 打开终端，进入前端目录：
    ```bash
-   cd /evelyn3/extension
+   cd /evelyn/extension
    ```
 3. 安装依赖：
    ```bash
@@ -42,7 +42,7 @@ Evelyn 是一个智能学习助手浏览器插件，旨在帮助用户规划个�
    - 打开 Chrome，访问 `chrome://extensions/`
    - 开启右上角的"开发者模式"
    - 点击"加载已解压的扩展程序"
-   - 选择 `/evelyn3/extension/build/chrome-mv3-dev` 目录
+   - 选择 `/evelyn/extension/build/chrome-mv3-prod` 目录
 
 ## 3. 使用指南
 
@@ -86,11 +86,7 @@ Evelyn 是一个智能学习助手浏览器插件，旨在帮助用户规划个�
 ### 3.5 侧边栏功能
 
 1. 浏览网页时，点击浏览器右侧的 Evelyn 图标打开侧边栏
-2. 侧边栏提供快速访问功能：
-   - 查看当前学习路径
-   - 记录学习笔记
-   - 保存当前网页为学习资源
-   - 获取学习建议
+2. 侧边栏提供学习路径的创建与查看功能
 
 ## 4. 功能详解
 
@@ -151,7 +147,7 @@ Evelyn 是一个智能学习助手浏览器插件，旨在帮助用户规划个�
 ### 5.4 如何备份数据
 
 - 所有学习数据存储在后端数据库中
-- 数据库文件位于 `/evelyn3/backend/instance/evelyn.db`
+- 数据库文件位于 `/evelyn/backend/instance/evelyn.db`
 - 定期复制此文件进行备份
 
 ## 6. 联系与支持

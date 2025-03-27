@@ -330,3 +330,16 @@ const EvelynOverlay: React.FC = () => {
 
 // 确保正确导出组件
 export default EvelynOverlay;
+
+// 添加 getStyle 导出函数
+export const getStyle = () => {
+  return {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 9999,
+    pointerEvents: "none", // 允许点击穿透到底层页面
+  };
+};
