@@ -50,7 +50,7 @@ class PersonalizationService:
             return None
         
         # 解析路径数据
-        path_data = json.loads(path.path_data)
+        path_data = json.loads(path.path_data) if isinstance(path.path_data, str) else path.path_data
         
         # 构建提示词，请求生成备选路径
         prompt = f"""
@@ -73,10 +73,14 @@ class PersonalizationService:
             if not adjusted_path:
                 return None
             
+            # 确保返回的是字典而不是字符串
+            if isinstance(adjusted_path, str):
+                adjusted_path = json.loads(adjusted_path)
+            
             return adjusted_path
             
         except Exception as e:
-            print(f"生成备选路径失败: {str(e)}")
+            logger.error(f"生成备选路径失败: {str(e)}")
             return None
     
     def adjust_path_based_on_behavior(self, user_id, path_id):
@@ -95,7 +99,7 @@ class PersonalizationService:
             return None
         
         # 解析路径数据
-        path_data = json.loads(path.path_data)
+        path_data = json.loads(path.path_data) if isinstance(path.path_data, str) else path.path_data
         
         # 分析用户行为，提取兴趣和倾向
         domains = {}
@@ -139,8 +143,12 @@ class PersonalizationService:
             if not adjusted_path:
                 return None
             
+            # 确保返回的是字典而不是字符串
+            if isinstance(adjusted_path, str):
+                adjusted_path = json.loads(adjusted_path)
+            
             return adjusted_path
             
         except Exception as e:
-            print(f"调整学习路径失败: {str(e)}")
+            logger.error(f"调整学习路径失败: {str(e)}")
             return None

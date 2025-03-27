@@ -136,11 +136,12 @@ def get_learning_path(current_user, path_id):
     if path.user_id != current_user.id:
         return jsonify({'message': '无权访问此学习路径'}), 403
     
+    
     # 获取原始路径数据
     original_path_data = path.get_path_data()
     
     # 获取个性化调整后的路径
-    personalized_info = get_personalized_path(current_user.id, path_id, original_path_data)
+    # personalized_info = get_personalized_path(current_user.id, path_id, original_path_data)
     
     # 构建响应数据
     response_data = {
@@ -151,13 +152,14 @@ def get_learning_path(current_user, path_id):
         'created_at': path.created_at.isoformat(),
         'updated_at': path.updated_at.isoformat()
     }
-    
+
+    '''
     # 如果有个性化调整，添加到响应中
     if personalized_info:
         response_data['adjusted_path'] = personalized_info['adjusted_path']
         response_data['adjustment_type'] = personalized_info['adjustment_type']
         response_data['frustrated_skills'] = personalized_info['frustrated_skills']
-    
+    '''
     return jsonify(response_data), 200
 
 @learning_path_bp.route('/<int:path_id>/completion', methods=['PUT'])

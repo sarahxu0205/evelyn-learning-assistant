@@ -171,6 +171,40 @@ class KnowledgeService:
             ]
         }
     
+    def _call_llm(self, prompt):
+        """调用大语言模型生成内容"""
+        try:
+            # 调用本地Ollama模型
+            response = requests.post(
+                self.ollama_api,
+                json={
+                    "model": self.model,
+                    "prompt": prompt,
+                    "stream": False
+                }
+            )
+            
+            if response.status_code != 200:
+                raise Exception(f"调用Ollama API失败: {response.text}")
+            
+            # 解析响应
+            result = response.json()
+            response_text = result.get("response", "")
+            
+            # 提取JSON部分
+            json_start = response_text.find("{")
+            json_end = response_text.rfind("}")
+            
+            if json_start == -1 or json_end == -1:
+                raise Exception("无法从响应中提取JSON")
+            
+            json_text = response_text[json_start:json_end+1]
+            return json.loads(json_text)
+            
+        except Exception as e:
+            logger.error(f"调用LLM失败: {str(e)}")
+            return None
+    
     def analyze_learning_goal(self, goal_text):
         """分析用户学习目标，提取关键信息"""
         logger.info(f"分析学习目标: {goal_text}")

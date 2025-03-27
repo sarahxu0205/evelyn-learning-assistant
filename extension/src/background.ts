@@ -1,4 +1,4 @@
-import type { PlasmoMessaging } from "@plasmohq/messaging"
+//import type { PlasmoMessaging } from "@plasmohq/messaging"
 
 // 监听图标点击事件
 chrome.action.onClicked.addListener((tab) => {
@@ -91,6 +91,20 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       break;
       
     case 'getLearningPath':
+      handleApiRequest(
+        `${baseUrl}/api/learning-path/${message.pathId}`,
+        "GET",
+        {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${message.token}`
+        },
+        null,
+        sendResponse
+      );
+      break;
+      
+    // 添加 getLearningPathDetail 处理
+    case 'getLearningPathDetail':
       handleApiRequest(
         `${baseUrl}/api/learning-path/${message.pathId}`,
         "GET",

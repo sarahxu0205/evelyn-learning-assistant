@@ -260,7 +260,7 @@ export const LearningPathDisplay = ({ path, onUpdatePath }: LearningPathDisplayP
           <Panel 
             header={
               <Space>
-                <Text strong>{`阶段${index+1}：${stage.name}`}</Text>
+                <Text strong>{`${stage.name}`}</Text>
                 <Tag icon={<ClockCircleOutlined />} color="blue">
                   {stage.estimated_time}
                 </Tag>
