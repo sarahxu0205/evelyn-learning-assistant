@@ -87,7 +87,7 @@ class PersonalizationService:
             frustrated_skills: 用户遇到挫折的技能列表
             
         Returns:
-            dict/str: 调整后的学习路径数据，如果生成失败则返回None
+            str: 调整后的学习路径数据（JSON字符串），如果生成失败则返回None
         """
         # 获取原始学习路径
         path = LearningPath.query.get(path_id)
@@ -117,7 +117,9 @@ class PersonalizationService:
         保持相同的JSON格式，但调整内容使其更易于理解。
         提供更多的入门资源和基础解释，将复杂概念分解为更小的步骤。
         """
-        
+
+        logger.info(f"生成备选路径的完整提示词：{prompt} ")
+
         try:
             # 调用知识服务生成备选路径
             logger.info(f"为用户 {user_id} 生成备选学习路径，针对技能: {frustrated_skills}")
@@ -128,23 +130,33 @@ class PersonalizationService:
                 logger.error("生成备选路径失败: LLM返回空结果")
                 return None
             
-            # 确保返回的是字典而不是字符串
+            logger.info(f"备选路径生成结果：{adjusted_path} ")
+
+            # 确保返回的是JSON字符串
             if isinstance(adjusted_path, str):
                 try:
-                    adjusted_path = json.loads(adjusted_path)
+                    # 先解析为字典，再转回字符串，确保格式正确
+                    adjusted_path_dict = json.loads(adjusted_path)
+                    return json.dumps(adjusted_path_dict, ensure_ascii=False)
                 except json.JSONDecodeError:
                     logger.error(f"解析LLM返回的JSON失败: {adjusted_path[:100]}...")
                     return adjusted_path  # 返回原始字符串，让API层处理
-            
-            logger.info(f"成功为用户 {user_id} 生成备选学习路径")
-            return adjusted_path
+            else:
+                # 如果已经是字典，转换为JSON字符串
+                logger.info(f"成功为用户 {user_id} 生成备选学习路径")
+                return json.dumps(adjusted_path, ensure_ascii=False)
             
         except Exception as e:
             logger.error(f"生成备选路径失败: {str(e)}")
             return None
     
     def adjust_path_based_on_behavior(self, user_id, path_id):
-        """根据用户行为调整学习路径"""
+        """
+        根据用户行为调整学习路径
+        
+        Returns:
+            str: 调整后的学习路径数据（JSON字符串），如果生成失败则返回None
+        """
         # 获取用户行为数据
         behaviors = UserBehavior.query.filter_by(user_id=user_id).order_by(
             UserBehavior.timestamp.desc()
@@ -203,11 +215,18 @@ class PersonalizationService:
             if not adjusted_path:
                 return None
             
-            # 确保返回的是字典而不是字符串
+            # 确保返回的是JSON字符串
             if isinstance(adjusted_path, str):
-                adjusted_path = json.loads(adjusted_path)
-            
-            return adjusted_path
+                try:
+                    # 先解析为字典，再转回字符串，确保格式正确
+                    adjusted_path_dict = json.loads(adjusted_path)
+                    return json.dumps(adjusted_path_dict, ensure_ascii=False)
+                except json.JSONDecodeError:
+                    logger.error(f"解析LLM返回的JSON失败")
+                    return adjusted_path  # 返回原始字符串
+            else:
+                # 如果已经是字典，转换为JSON字符串
+                return json.dumps(adjusted_path, ensure_ascii=False)
             
         except Exception as e:
             logger.error(f"调整学习路径失败: {str(e)}")

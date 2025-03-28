@@ -169,22 +169,63 @@ export const LearningPathDisplay = ({ path, onUpdatePath }: LearningPathDisplayP
   };
   
   // 添加应用备选路径的函数
-  const applyAlternativePath = () => {
+  const applyAlternativePath = async () => {
     if (!alternativePath) return;
     
-    // 更新本地路径数据
-    if (onUpdatePath) {
+    // 设置加载状态
+    setGeneratingAlternative(true);
+    
+    try {
+      // 获取用户令牌
+      const userTokenResult = await new Promise<{userToken?: string}>((resolve) => {
+        chrome.storage.local.get(['userToken'], (result) => {
+          resolve(result);
+        });
+      });
+      
+      if (!userTokenResult.userToken) {
+        message.error('请先登录后再应用备选路径');
+        setGeneratingAlternative(false);
+        return;
+      }
+      
+      // 构建更新后的路径数据
       const updatedPath = {
-        ...path,
+        //...path,
         title: alternativePath.title || path.title,
         description: alternativePath.description || path.description,
         estimated_time: alternativePath.estimated_time || path.estimated_time,
         stages: alternativePath.stages || path.stages
       };
       
-      onUpdatePath(updatedPath);
-      setShowAlternativeModal(false);
-      message.success('已应用备选学习路径');
+      // 发送消息到后台脚本进行API调用，保存备选路径
+      chrome.runtime.sendMessage(
+        {
+          type: 'saveLearningPath',
+          pathId: path.id,
+          pathData: updatedPath,
+          token: userTokenResult.userToken
+        },
+        (response) => {
+          setGeneratingAlternative(false);
+          
+          if (response && response.success) {
+            // 更新本地路径数据
+            if (onUpdatePath) {
+              onUpdatePath(updatedPath);
+            }
+            
+            setShowAlternativeModal(false);
+            message.success('备选学习路径已保存并应用');
+          } else {
+            message.error(response?.error || '保存备选路径失败，请稍后再试');
+          }
+        }
+      );
+    } catch (error) {
+      console.error('保存备选路径出错:', error);
+      message.error('保存失败，请稍后再试');
+      setGeneratingAlternative(false);
     }
   };
   
@@ -310,9 +351,25 @@ export const LearningPathDisplay = ({ path, onUpdatePath }: LearningPathDisplayP
           description={
             <div>
               <p>我们检测到您在以下技能学习中可能遇到了困难：</p>
-              <div style={{ margin: '8px 0' }}>
+              <div style={{ margin: '8px 0', display: 'flex', flexWrap: 'wrap' }}>
                 {frustratedSkills.map((skill, index) => (
-                  <Tag color="volcano" key={index} style={{ margin: '4px' }}>{skill}</Tag>
+                  <Tag 
+                    color="volcano" 
+                    key={index} 
+                    style={{ 
+                      margin: '4px', 
+                      maxWidth: '100%',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'normal',
+                      wordBreak: 'break-word',
+                      lineHeight: '1.5',
+                      padding: '4px 8px'
+                    }}
+                    title={skill} // 添加title属性，鼠标悬停时显示完整内容
+                  >
+                    {skill.length > 20 ? `${skill.substring(0, 20)}...` : skill}
+                  </Tag>
                 ))}
               </div>
               <p>我们可以为您生成一条更适合的学习路径，帮助您更顺利地掌握这些技能。</p>
@@ -529,9 +586,15 @@ export const LearningPathDisplay = ({ path, onUpdatePath }: LearningPathDisplayP
           <Button key="cancel" onClick={() => setShowAlternativeModal(false)}>
             取消
           </Button>,
-          <Button key="apply" type="primary" onClick={applyAlternativePath}>
-            应用此路径
-          </Button>
+          alternativePath ? (
+            <Button key="apply" type="primary" onClick={applyAlternativePath}>
+              应用此路径
+            </Button>
+          ) : (
+            <Button key="retry" type="primary" onClick={generateAlternativePath} loading={generatingAlternative}>
+              重新生成
+            </Button>
+          )
         ]}
         width={800}
       >

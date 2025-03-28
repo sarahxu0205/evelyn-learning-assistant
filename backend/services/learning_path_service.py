@@ -2,6 +2,11 @@ import requests
 import json
 import re
 from models.learning_path import LearningPath, db
+import logging
+
+# 配置日志
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 class LearningPathService:
     """学习路径服务"""
@@ -455,3 +460,56 @@ class LearningPathService:
                 }
             ]
         }
+
+    
+    def save_alternative_path(self, path_id, alternative_path_data, user_id=None):
+        """
+        保存备选学习路径至学习路径库
+        
+        Args:
+            path_id: 原始学习路径ID
+            alternative_path_data: 备选学习路径数据
+            user_id: 用户ID，用于验证权限
+            
+        Returns:
+            bool: 保存是否成功
+            str: 错误信息（如果有）
+            dict: 更新后的学习路径数据
+        """
+        logger.info(f"保存备选学习路径至学习路径库，path_id: {path_id}, alternative_path_data: {alternative_path_data}, user_id: {user_id}")
+
+        # 确保alternative_path_data是字典类型
+        if isinstance(alternative_path_data, str):
+            try:
+                alternative_path_data = json.loads(alternative_path_data)
+            except json.JSONDecodeError:
+                return False, "无效的备选路径数据格式", None
+                
+        # 查询原始学习路径
+        path = LearningPath.query.get(path_id)
+        if not path:
+            return False, "找不到原始学习路径", None
+            
+        # 验证用户权限
+        if user_id and path.user_id != user_id:
+            return False, "无权修改此学习路径", None
+            
+        try:       
+            # 更新学习路径
+            path.title = alternative_path_data.get('title', path.title)
+            path.description = alternative_path_data.get('description', path.description)
+            path.estimated_time = alternative_path_data.get('estimated_time', path.estimated_time)
+            path.path_data = json.dumps(alternative_path_data)
+            
+            # 保存到数据库
+            db.session.add(path)
+            db.session.commit()
+            
+            print(f"成功保存备选学习路径，更新路径 ID: {path_id}")
+            return True, None, alternative_path_data
+            
+        except Exception as e:
+            db.session.rollback()
+            error_msg = f"保存备选学习路径失败: {str(e)}"
+            print(error_msg)
+            return False, error_msg, None

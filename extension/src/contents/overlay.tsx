@@ -332,14 +332,39 @@ const EvelynOverlay: React.FC = () => {
 export default EvelynOverlay;
 
 // 添加 getStyle 导出函数
+/*
 export const getStyle = () => {
+  // 返回一个样式对象而不是字符串
   return {
-    position: "fixed",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: 9999,
-    pointerEvents: "none", // 允许点击穿透到底层页面
+    // 使用 CSS-in-JS 格式
+    ".__plasmo-cs-overlay": {
+      display: "none"  // 隐藏任何可能的调试输出
+    },
+    ".evelyn-drawer": {
+      position: "fixed",
+      zIndex: 9999,
+      height: "100vh",
+      top: 0,
+      right: 0
+    },
+    ".ant-drawer-content-wrapper": {
+      height: "100vh !important",
+      position: "fixed !important",
+      top: "0 !important",
+      right: "0 !important"
+    },
+    ".ant-drawer-content": {
+      height: "100vh !important",
+      overflow: "hidden !important"
+    },
+    ".ant-drawer-body": {
+      padding: "0 !important",
+      height: "100vh !important",
+      overflow: "auto !important"
+    },
+    "body": {
+      overflow: "auto !important"
+    }
   };
 };
+*/

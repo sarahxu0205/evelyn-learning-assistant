@@ -185,3 +185,39 @@ def update_completion_rate(current_user, path_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({'message': f'更新失败: {str(e)}'}), 500
+
+@learning_path_bp.route('/<int:path_id>/save-alternative', methods=['POST'])
+@token_required
+def save_alternative_path(current_user, path_id):
+    """保存备选学习路径"""
+    data = request.get_json()
+    
+    if not data:
+        return jsonify({'message': '请提供备选路径数据'}), 400
+    
+    alternative_path_data = data.get('alternative_path_data')
+    
+    if not alternative_path_data:
+        return jsonify({'message': '请提供备选路径数据'}), 400
+    
+    # 验证学习路径存在且属于当前用户
+    path = LearningPath.query.filter_by(id=path_id, user_id=current_user.id).first()
+    if not path:
+        return jsonify({'message': '学习路径不存在或无权访问'}), 404
+    
+    # 调用服务保存备选路径
+    learning_path_service = LearningPathService()
+    success, error_msg, updated_path_data = learning_path_service.save_alternative_path(
+        path_id, alternative_path_data, current_user.id
+    )
+    
+    if not success:
+        logger.error(f"保存备选路径失败: {error_msg}")
+        return jsonify({'message': f'保存备选路径失败: {error_msg}'}), 500
+    
+    return jsonify({
+        'message': '备选路径保存成功',
+        'path_id': path_id,
+        'updated_path': updated_path_data
+    }), 200
+    

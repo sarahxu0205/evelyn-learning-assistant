@@ -303,6 +303,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           sendResponse
         );
       break;
+
       case 'detectFrustration':
         // 处理检测挫折的请求
         fetch(`${baseUrl}/api/learning-path/${message.pathId}/detect-frustration`, {
@@ -328,7 +329,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${message.token}`
           }
         })
         .then(response => response.json())
@@ -338,6 +339,32 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         .catch(error => {
           console.error('生成备选路径失败:', error);
           sendResponse({ success: false, error: error.message || '生成备选路径失败' });
+        });
+      break;
+
+      case 'saveLearningPath':
+        // 处理保存备选学习路径的请求
+        fetch(`${baseUrl}/api/learning-path/${message.pathId}/save-alternative`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${message.token}`
+          },
+          body: JSON.stringify({ alternative_path_data: message.pathData })
+        })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`保存备选路径失败: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(data => {
+          console.log('备选路径保存成功:', data);
+          sendResponse({ success: true, data });
+        })
+        .catch(error => {
+          console.error('保存备选路径失败:', error);
+          sendResponse({ success: false, error: error.message || '保存备选路径失败' });
         });
       break;
   }
