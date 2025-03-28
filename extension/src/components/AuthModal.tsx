@@ -43,7 +43,7 @@ export const AuthModal = ({ visible, onClose, onLogin }: AuthModalProps) => {
             });
           } else {
             // 处理错误...
-            console.error("认证失败", response?.error);
+            console.error("认证失败：", response?.error);
             message.error(`登录失败: ${response?.error || "请检查网络连接和服务器状态"}`);
           }
           setLoading(false);

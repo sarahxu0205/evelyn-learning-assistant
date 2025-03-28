@@ -27,6 +27,8 @@ try {
 
 // 统一处理API请求的函数
 const handleApiRequest = (url: string, method: string, headers: any, body: any, sendResponse: Function) => {
+  console.log(`发送请求到: ${url}`, { method, headers, body });
+  
   fetch(url, {
     method: method,
     headers: headers,
@@ -34,8 +36,26 @@ const handleApiRequest = (url: string, method: string, headers: any, body: any, 
     mode: "cors",
     credentials: "omit"
   })
-  .then(response => response.json())
+  .then(response => {
+    console.log(`收到响应: ${response.status} ${response.statusText}`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    return response.text().then(text => {
+      if (!text) {
+        console.log('响应内容为空');
+        return {};
+      }
+      try {
+        return JSON.parse(text);
+      } catch (e) {
+        console.error('JSON解析错误:', e, '原始响应:', text);
+        throw new Error('无效的JSON响应');
+      }
+    });
+  })
   .then(data => {
+    console.log('API请求成功:', data);
     sendResponse({success: true, data});
   })
   .catch(error => {
