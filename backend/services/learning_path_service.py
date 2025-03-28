@@ -133,6 +133,7 @@ class LearningPathService:
         }}
         
         只返回JSON格式的学习路径，不要有其他文字。
+        需要确保总预计学习时间是所有阶段预计学习时间的总和。
         """
     
     def _get_default_path(self, goal):

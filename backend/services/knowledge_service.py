@@ -17,6 +17,8 @@ class KnowledgeService:
     def __init__(self):
         self.ollama_api = "http://127.0.0.1:11434/api/generate"
         self.model = "deepseek-r1:8b"  # 使用本地模型
+            
+        self.crawler = KnowledgeCrawler()
     
     def generate_learning_path(self, goal):
         """生成学习路径"""
@@ -226,11 +228,26 @@ class KnowledgeService:
         """
         
         try:
-            response = self.ollama_client.generate(model='deepseek-r1:8b', prompt=prompt)
+            # 修改为使用与__init__中相同的API调用方式
+            response = requests.post(
+                self.ollama_api,
+                json={
+                    "model": self.model,
+                    "prompt": prompt,
+                    "stream": False
+                }
+            )
+            
+            if response.status_code != 200:
+                raise Exception(f"调用Ollama API失败: {response.text}")
+            
+            # 解析响应
+            result = response.json()
+            response_text = result.get("response", "")
             
             # 提取JSON部分
             import re
-            json_match = re.search(r'({.*})', response.replace('\n', ''), re.DOTALL)
+            json_match = re.search(r'({.*})', response_text.replace('\n', ''), re.DOTALL)
             if not json_match:
                 raise ValueError("无法解析模型返回的JSON")
             
@@ -251,9 +268,9 @@ class KnowledgeService:
                 'purpose': ''
             }
     
-    def generate_learning_path(self, goal_text):
-        """根据用户学习目标生成学习路径"""
-        logger.info(f"生成学习路径: {goal_text}")
+    def generate_advanced_learning_path(self, goal_text):
+        """根据用户学习目标生成高级学习路径（包含分析和爬取资源）"""
+        logger.info(f"生成高级学习路径: {goal_text}")
         
         # 1. 分析学习目标
         goal_info = self.analyze_learning_goal(goal_text)
@@ -315,11 +332,26 @@ class KnowledgeService:
         """
         
         try:
-            response = self.ollama_client.generate(model='deepseek-r1:8b', prompt=prompt)
+            # 修改为使用与__init__中相同的API调用方式
+            response = requests.post(
+                self.ollama_api,
+                json={
+                    "model": self.model,
+                    "prompt": prompt,
+                    "stream": False
+                }
+            )
+            
+            if response.status_code != 200:
+                raise Exception(f"调用Ollama API失败: {response.text}")
+            
+            # 解析响应
+            result = response.json()
+            response_text = result.get("response", "")
             
             # 提取JSON部分
             import re
-            json_match = re.search(r'({.*})', response.replace('\n', ''), re.DOTALL)
+            json_match = re.search(r'({.*})', response_text.replace('\n', ''), re.DOTALL)
             if not json_match:
                 raise ValueError("无法解析模型返回的JSON")
             

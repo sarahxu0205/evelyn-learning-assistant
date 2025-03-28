@@ -155,6 +155,7 @@ export const LearningPathDisplay = ({ path, onUpdatePath }: LearningPathDisplayP
           if (response && response.success) {
             setAlternativePath(response.data.adjusted_path);
             setShowAlternativeModal(true);
+            console.log('备选学习路径:', response.data.adjusted_path);
             message.success('备选学习路径生成成功');
           } else {
             message.error(response?.error || '生成备选路径失败，请稍后再试');
