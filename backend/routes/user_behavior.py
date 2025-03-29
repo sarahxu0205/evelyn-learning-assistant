@@ -1,6 +1,14 @@
 from flask import Blueprint, request, jsonify
 from models.user_behavior import UserBehavior, db
 from utils.auth import token_required
+import re
+from urllib.parse import urlparse, parse_qs
+from urllib.parse import unquote
+import logging
+
+# 配置日志
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 user_behavior_bp = Blueprint('user_behavior', __name__)
 
@@ -15,9 +23,23 @@ def record_behavior(current_user):
     
     url = data.get('url', '')
     title = data.get('title', '')
-    search_query = data.get('search_query', '')
-    duration = data.get('duration', 0)
     
+    # 从URL中包含搜索参数尝试提取search_query
+    if url:
+        parsed_url = urlparse(url)
+        query_params = parse_qs(parsed_url.query)
+        search_query = ""
+        # 常见搜索参数名称
+        search_param_names = ['q', 'query', 'key', 'keyword', 'wd', 'word', 'text', 'search', 'term']
+        # 遍历所有可能的搜索参数名称
+        for param in search_param_names:
+            if param in query_params and query_params[param][0]:
+                search_query = unquote(query_params[param][0])
+                logger.info(f"从URL参数 '{param}' 提取到搜索关键字: {search_query}")
+                break
+
+        duration = data.get('duration', 0)
+
     if not url:
         return jsonify({'message': '请提供URL'}), 400
     
