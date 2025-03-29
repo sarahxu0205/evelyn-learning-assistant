@@ -23,12 +23,11 @@ def record_behavior(current_user):
     
     url = data.get('url', '')
     title = data.get('title', '')
-    
+    search_query = ""   
     # 从URL中包含搜索参数尝试提取search_query
     if url:
         parsed_url = urlparse(url)
         query_params = parse_qs(parsed_url.query)
-        search_query = ""
         # 常见搜索参数名称
         search_param_names = ['q', 'query', 'key', 'keyword', 'wd', 'word', 'text', 'search', 'term']
         # 遍历所有可能的搜索参数名称

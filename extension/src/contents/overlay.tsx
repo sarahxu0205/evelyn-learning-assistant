@@ -131,7 +131,29 @@ const EvelynOverlay: React.FC = () => {
     
     // 监听页面关闭事件
     const handleBeforeUnload = () => {
-      recordPageView('page_exit');
+      // 使用同步方式记录页面退出，确保在页面关闭前完成
+      try {
+        const duration = Math.floor((Date.now() - startTime) / 1000);
+        if (currentUrl && typeof currentUrl === 'string') {
+          // 直接调用记录行为函数，不使用异步方式
+          chrome.runtime.sendMessage({
+            type: 'recordUserBehavior',
+            token: localStorage.getItem('userToken'),
+            data: {
+              user_id: Number(localStorage.getItem('userId')),
+              behavior_type: 'page_exit',
+              title: currentTitle,
+              url: currentUrl,
+              search_query: currentUrl.includes('?') ? currentUrl.split('?')[1] : '',
+              duration: duration,
+              timestamp: new Date().toISOString()
+            }
+          });
+          console.log('页面退出事件已发送', duration);
+        }
+      } catch (error) {
+        console.error('记录页面退出失败', error);
+      }
     };
     
     window.addEventListener("beforeunload", handleBeforeUnload);
@@ -139,8 +161,19 @@ const EvelynOverlay: React.FC = () => {
     // 添加定期记录页面访问的功能
     const recordInterval = setInterval(() => {
       // 每5分钟记录一次页面访问
-      recordPageView('page_active');
-    }, 5 * 60 * 1000);
+      console.log('触发定时记录页面访问');
+      if (currentUrl && currentUrl !== '') {
+        recordPageView('page_active');
+      }
+    }, 5 * 60 * 1000); // 改为5分钟间隔，避免过于频繁的请求
+    
+    // 添加一个立即执行的记录，确保在组件挂载后记录一次
+    const initialRecordTimeout = setTimeout(() => {
+      if (currentUrl && currentUrl !== '') {
+        console.log('初始化记录页面访问');
+        recordPageView('page_active');
+      }
+    }, 10000); // 10秒后记录一次，确保页面已完全加载
     
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
@@ -148,19 +181,29 @@ const EvelynOverlay: React.FC = () => {
       chrome.runtime.onMessage.removeListener(handleUrlUpdate);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       clearInterval(recordInterval);
-      recordPageView('page_exit');
+      clearTimeout(initialRecordTimeout); // 清理初始化记录的timeout
+      
+      // 尝试记录页面退出事件
+      if (currentUrl && currentUrl !== '') {
+        console.log('组件卸载时记录页面退出');
+        recordPageView('page_exit');
+      }
     };
   }, [visible]); // 添加 visible 作为依赖项
   
   // 记录页面访问
   const recordPageView = async (action: string = 'page_view') => {
     try {
+      console.log(`开始记录页面访问: ${action}`);
+      
       // 计算停留时间（秒）
-      const duration = Math.floor((Date.now() - startTime) / 1000)
+      const duration = Math.floor((Date.now() - startTime) / 1000);
+      console.log(`页面停留时间: ${duration}秒`);
       
       // 如果停留时间小于5秒且不是页面加载事件，不记录
       if (duration < 5 && action !== 'page_load') {
-        return
+        console.log(`停留时间过短(${duration}秒)，不记录`);
+        return;
       }
       
       // 验证URL是否有效
@@ -173,6 +216,7 @@ const EvelynOverlay: React.FC = () => {
         // 尝试解析URL，验证其有效性
         new URL(currentUrl);
         
+        console.log(`记录行为: ${action}, URL: ${currentUrl.substring(0, 50)}...`);
         // 修复：确保参数类型与函数定义匹配
         recordBehavior(action, currentTitle, duration, currentUrl);
       } catch (urlError) {
@@ -180,12 +224,11 @@ const EvelynOverlay: React.FC = () => {
         return;
       }
     } catch (error) {
-      console.error("记录页面访问失败", error)
+      console.error("记录页面访问失败", error);
     }
   }
   
   // 记录用户行为
-  // 修复：修正参数类型定义，确保与调用方式匹配
   const recordBehavior = async (type: string, title: string, duration: number, url?: string) => {
     try {
       // 检查 URL 是否有效
