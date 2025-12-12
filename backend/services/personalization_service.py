@@ -51,8 +51,8 @@ class PersonalizationService:
             text_to_check = ""
             if behavior.search_query:
                 text_to_check += behavior.search_query.lower() + " "
-            if behavior.title:
-                text_to_check += behavior.title.lower() + " "
+            #if behavior.title:
+            #    text_to_check += behavior.title.lower() + " "
                 
             if not text_to_check:
                 continue
